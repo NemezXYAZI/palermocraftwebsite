@@ -27,12 +27,14 @@ class GameController extends Controller
         return response()->json([
             'linked' => true,
             'name' => $user->minecraft_name,
+            'account' => $user->name,
             'uuid' => $user->minecraft_uuid,
             'banned' => $user->isBanned(),
             'ban_reason' => $user->ban_reason,
             'role' => $user->role,
-            'discord_id' => $user->discord_id,
-            'telegram_id' => $user->telegram_id,
+            // рядками: Discord snowflake не влазить у double
+            'discord_id' => $user->discord_id !== null ? (string) $user->discord_id : null,
+            'telegram_id' => $user->telegram_id !== null ? (string) $user->telegram_id : null,
             'skin' => $skin ? [
                 'model' => $skin->model,
                 'png_url' => route('skins.png', ['name' => $user->minecraft_name]),
