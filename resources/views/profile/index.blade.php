@@ -35,6 +35,16 @@
                         Інвентар
                     </button>
 
+                    <a href="{{ route('profile.skin') }}" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-gray-300">
+                        Мій скін
+                    </a>
+
+                    @if ($user->isStaff())
+                        <a href="{{ route('admin.dashboard') }}" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-yellow-300">
+                            Адмін-панель
+                        </a>
+                    @endif
+
                     <form method="POST" action="{{ route('logout') }}" class="mt-4">
                         @csrf
                         <button type="submit" class="w-full text-left px-4 py-3 rounded-xl hover:bg-red-900/50 text-red-500 transition-colors border border-red-900/30">
@@ -156,91 +166,7 @@
                                 @endif
                             </div>
 
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                <h4 class="font-bold text-palermo-green mb-4">Discord</h4>
-
-                                @if ($user->discord_linked_at)
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div>
-                                            <p class="font-bold">{{ $user->discord_username }}</p>
-                                            <p class="text-xs text-palermo-green">
-                                                Привʼязано: {{ $user->discord_linked_at->format('d.m.Y H:i') }}
-                                            </p>
-                                        </div>
-
-                                        <form method="POST" action="{{ route('profile.discord.unlink') }}">
-                                            @csrf
-                                            <button type="submit" class="bg-red-900/50 text-red-300 border border-red-800 px-4 py-2 rounded-xl hover:bg-red-900 transition-colors text-sm font-bold">
-                                                Відвʼязати
-                                            </button>
-                                        </form>
-                                    </div>
-                                @else
-                                    <form method="POST" action="{{ route('profile.discord.link') }}" class="space-y-4">
-                                        @csrf
-
-                                        <p class="text-sm text-gray-400">
-                                            Введіть 6-значний код, отриманий від Discord-бота.
-                                        </p>
-
-                                        <input
-                                            type="text"
-                                            name="discord_code"
-                                            maxlength="6"
-                                            required
-                                            placeholder="ABC123"
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors uppercase"
-                                        >
-
-                                        <button type="submit" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold px-5 py-3 rounded-xl transition-colors">
-                                            Привʼязати Discord
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
-
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 xl:col-span-2">
-                                <h4 class="font-bold text-palermo-green mb-4">Telegram</h4>
-
-                                @if ($user->telegram_linked_at)
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div>
-                                            <p class="font-bold">{{ $user->telegram_username }}</p>
-                                            <p class="text-xs text-palermo-green">
-                                                Привʼязано: {{ $user->telegram_linked_at->format('d.m.Y H:i') }}
-                                            </p>
-                                        </div>
-
-                                        <form method="POST" action="{{ route('profile.telegram.unlink') }}">
-                                            @csrf
-                                            <button type="submit" class="bg-red-900/50 text-red-300 border border-red-800 px-4 py-2 rounded-xl hover:bg-red-900 transition-colors text-sm font-bold">
-                                                Відвʼязати
-                                            </button>
-                                        </form>
-                                    </div>
-                                @else
-                                    <form method="POST" action="{{ route('profile.telegram.link') }}" class="space-y-4">
-                                        @csrf
-
-                                        <p class="text-sm text-gray-400">
-                                            Введіть 6-значний код, отриманий від Telegram-бота.
-                                        </p>
-
-                                        <input
-                                            type="text"
-                                            name="telegram_code"
-                                            maxlength="6"
-                                            required
-                                            placeholder="ABC123"
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors uppercase"
-                                        >
-
-                                        <button type="submit" class="bg-[#229ED9] hover:bg-[#1B89C2] text-white font-bold px-5 py-3 rounded-xl transition-colors">
-                                            Привʼязати Telegram
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
+                            @include('profile.partials.connections')
                         </div>
                     </div>
 
@@ -252,6 +178,11 @@
                             <p class="text-4xl font-bold text-palermo-green">{{ number_format($user->balance, 0, '.', ' ') }} монет</p>
                         </div>
 
+                        @unless ($user->isAdmin() || app()->isLocal())
+                            <div class="bg-yellow-900/20 border border-yellow-700/40 text-yellow-200 rounded-xl p-4 text-sm">
+                                Онлайн-оплату ще не підключено. Поповнення балансу з'явиться після запуску сервера.
+                            </div>
+                        @else
                         <form method="POST" action="{{ route('profile.top-up') }}" class="space-y-5">
                             @csrf
 
@@ -278,6 +209,7 @@
                                 Поповнити баланс
                             </button>
                         </form>
+                        @endunless
                     </div>
 
                     <div id="content-inventory" class="hidden">

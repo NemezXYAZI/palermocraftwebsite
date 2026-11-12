@@ -35,4 +35,23 @@ return [
         ],
     ],
 
+    // Підпис скінів Mojang (https://account.mineskin.org/keys) — без нього скін бачать лише гравці з модом
+    'mineskin' => [
+        'key' => env('MINESKIN_API_KEY'),
+        'user_agent' => env('MINESKIN_USER_AGENT', 'PalermoCraft-Website/1.0'),
+    ],
+
+    // Discord OAuth2: https://discord.com/developers/applications → OAuth2 → Redirect: https://palermocraft.com/auth/discord/callback
+    'discord' => [
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect' => env('DISCORD_REDIRECT_URI', env('APP_URL').'/auth/discord/callback'),
+    ],
+
+    // Telegram Login Widget: у @BotFather → /setdomain → palermocraft.com
+    'telegram' => [
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+    ],
+
 ];
