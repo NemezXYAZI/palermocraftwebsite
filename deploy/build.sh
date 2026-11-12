@@ -22,6 +22,12 @@ composer install --no-dev --optimize-autoloader --no-interaction --no-progress -
 #    (.git у vendor з'являються, якщо composer качав пакети з джерел, а не архівами)
 find vendor -name .git -type d -prune -exec rm -rf {} +
 rm -f vendor/laravel/framework/bin/splitsh-lite
+#    тести й документація пакетів (лише в корені пакета; автозавантажувач їх не використовує) —
+#    економить ~45 МБ, бо на дешевих тарифах диск 200 МБ
+find vendor -mindepth 3 -maxdepth 3 -type d \( -name tests -o -name Tests -o -name docs -o -name doc -o -name .github \) -prune -exec rm -rf {} +
+if grep -qE "/(tests|Tests|docs|doc)/" vendor/composer/autoload_psr4.php vendor/composer/autoload_classmap.php vendor/composer/autoload_files.php; then
+  echo "Автозавантажувач посилається на видалені тести — зупиняю збірку" >&2; exit 1
+fi
 rm -rf tests phpunit.xml .github .editorconfig .gitattributes node_modules dist
 rm -f bootstrap/cache/*.php
 cp deploy/root.htaccess .htaccess

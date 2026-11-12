@@ -9,6 +9,7 @@
  *
  * Ніколи не чіпає: .env, storage/ (скіни, логи, сесії), database/database.sqlite, .htaccess, .user.ini.
  * Перед оновленням робить копію коду в storage/app/backups/.
+ * Файли пише прямо з архіву і лише змінені, тож вільного місця треба небагато (тарифи на 200 МБ).
  *
  * Написано сумісно з PHP 7.4, щоб на старому PHP сторінка хоча б сказала, що треба 8.3.
  */
@@ -232,8 +233,11 @@ function pc_download_github(string $dest): array
     return [$dest, (string) ($release['tag_name'] ?? '')];
 }
 
-/** Розпаковує архів у тимчасову папку і повертає корінь збірки (папку з artisan). */
-function pc_extract(string $zipPath, string $tmp): string
+/**
+ * Відкриває архів збірки без розпаковування. Повертає [ZipArchive, префікс], де префікс —
+ * папка всередині архіву з artisan ('' якщо artisan лежить у корені).
+ */
+function pc_open_build(string $zipPath): array
 {
     if (!class_exists('ZipArchive')) {
         throw new RuntimeException('На хостингу немає PHP-розширення zip (увімкни в «Select PHP Version» → Extensions)');
@@ -242,36 +246,159 @@ function pc_extract(string $zipPath, string $tmp): string
     if ($zip->open($zipPath) !== true) {
         throw new RuntimeException('Файл не схожий на zip-архів');
     }
+    $prefix = null;
     for ($i = 0; $i < $zip->numFiles; $i++) {
         $name = (string) $zip->getNameIndex($i);
-        if (strpos($name, '..') !== false || $name === '' || $name[0] === '/' || strpos($name, '\\') !== false) {
+        if ($name === '' || $name[0] === '/' || strpos($name, '..') !== false || strpos($name, '\\') !== false) {
             $zip->close();
             throw new RuntimeException('Підозрілий шлях в архіві: ' . $name);
         }
+        if ($name === 'artisan') {
+            $prefix = '';
+        } elseif ($prefix === null && substr_count($name, '/') === 1 && substr($name, -8) === '/artisan') {
+            $prefix = substr($name, 0, -7);
+        }
     }
-    pc_rrmdir($tmp);
-    @mkdir($tmp, 0755, true);
-    if (!$zip->extractTo($tmp)) {
+    if ($prefix === null) {
         $zip->close();
-        throw new RuntimeException('Не вдалося розпакувати (місце на диску?)');
+        throw new RuntimeException('В архіві немає artisan — це не збірка palermocraft-site.zip');
     }
-    $zip->close();
+    foreach (['vendor/autoload.php', 'public/index.php', 'bootstrap/app.php'] as $must) {
+        if ($zip->locateName($prefix . $must) === false) {
+            $zip->close();
+            throw new RuntimeException("В архіві немає $must — це не повна збірка");
+        }
+    }
+    return [$zip, $prefix];
+}
 
-    // Архів міг бути перепакований з папкою зверху
-    $root = $tmp;
-    if (!is_file($root . '/artisan')) {
-        foreach (glob($tmp . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
-            if (is_file($dir . '/artisan')) {
-                $root = $dir;
+/** Записує один файл з архіву: спершу поруч у тимчасовий, потім підміна (не лишає напівзаписаних файлів). */
+function pc_write_entry(ZipArchive $zip, string $name, string $dest): void
+{
+    $dir = dirname($dest);
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Не вдалося створити папку ' . $dir);
+    }
+    $in = $zip->getStream($name);
+    if ($in === false) {
+        throw new RuntimeException('Не вдалося прочитати з архіву ' . $name);
+    }
+    $tmp = $dest . '.pc-upd';
+    $out = @fopen($tmp, 'wb');
+    if ($out === false) {
+        fclose($in);
+        throw new RuntimeException('Не вдалося записати ' . $dest . ' (права доступу?)');
+    }
+    $ok = stream_copy_to_stream($in, $out) !== false;
+    fclose($in);
+    $ok = fclose($out) && $ok;
+    if (!$ok) {
+        @unlink($tmp);
+        throw new RuntimeException('Закінчилося місце на диску під час запису ' . $dest);
+    }
+    if (!@rename($tmp, $dest)) {
+        $copied = @copy($tmp, $dest);
+        @unlink($tmp);
+        if (!$copied) {
+            throw new RuntimeException('Не вдалося замінити ' . $dest);
+        }
+    }
+}
+
+/**
+ * Застосовує збірку прямо з архіву, без повної розпакованої копії (важливо на тарифах з малим диском):
+ * пише лише файли, що змінилися (порівняння за розміром і CRC32), прибирає застарілі.
+ */
+function pc_apply_build(ZipArchive $zip, string $prefix): void
+{
+    $plen = strlen($prefix);
+    $newManifest = [];
+    $raw = $zip->getFromName($prefix . '.deploy-manifest');
+    if (is_string($raw)) {
+        $newManifest = array_values(array_filter(array_map('trim', explode("\n", $raw)), 'pc_safe_rel'));
+    }
+    $oldManifest = pc_manifest(PC_BASE);
+
+    $vendorInZip = [];
+    $written = 0;
+    $same = 0;
+    $kept = 0;
+    $bytes = 0;
+
+    // Двічі: спершу все, крім vendor, потім vendor — щоб сайт якнайменше часу був «напівоновлений»
+    foreach ([false, true] as $vendorPass) {
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $st = $zip->statIndex($i);
+            $name = (string) $st['name'];
+            if ($plen && strncmp($name, $prefix, $plen) !== 0) {
+                continue;
+            }
+            $rel = substr($name, $plen);
+            if ($rel === '' || substr($rel, -1) === '/') {
+                continue;
+            }
+            $isVendor = strncmp($rel, 'vendor/', 7) === 0;
+            if ($isVendor !== $vendorPass || !pc_safe_rel($rel)) {
+                continue;
+            }
+            $dest = PC_BASE . '/' . $rel;
+            if ($isVendor) {
+                $vendorInZip[$rel] = true;
+            }
+            if (strncmp($rel, 'storage/', 8) === 0 && file_exists($dest)) {
+                continue; // storage — дані сайту; з архіву лише каркас нових папок
+            }
+            if (pc_is_protected($rel) && file_exists($dest)) {
+                $kept++;
+                continue;
+            }
+            if (is_file($dest) && filesize($dest) === (int) $st['size']
+                && hash_file('crc32b', $dest) === sprintf('%08x', ((int) $st['crc']) & 0xFFFFFFFF)) {
+                $same++;
+                continue;
+            }
+            pc_write_entry($zip, $name, $dest);
+            $written++;
+            $bytes += (int) $st['size'];
+        }
+    }
+    pc_log(sprintf('Оновлено файлів: %d (%.1f МБ), без змін: %d, збережено твоїх: %d', $written, $bytes / 1048576, $same, $kept));
+
+    // vendor: прибрати файли пакетів, яких немає в новій збірці
+    if (count($vendorInZip) > 100 && is_dir(PC_BASE . '/vendor')) {
+        $removed = 0;
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(PC_BASE . '/vendor', FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($it as $f) {
+            $rel = str_replace('\\', '/', substr($f->getPathname(), strlen(PC_BASE) + 1));
+            if ($f->isDir()) {
+                @rmdir($f->getPathname()); // лише якщо порожня
+            } elseif (!isset($vendorInZip[$rel]) && @unlink($f->getPathname())) {
+                $removed++;
             }
         }
-    }
-    foreach (['artisan', 'vendor/autoload.php', 'public/index.php', 'bootstrap/app.php'] as $must) {
-        if (!is_file($root . '/' . $must)) {
-            throw new RuntimeException("В архіві немає $must — це не повна збірка palermocraft-site.zip");
+        if ($removed) {
+            pc_log("vendor: прибрано застарілих файлів: $removed");
         }
     }
-    return $root;
+
+    // Решта: файли, які ставила попередня збірка, а в новій їх немає
+    if ($oldManifest && $newManifest) {
+        $removed = 0;
+        foreach (array_diff($oldManifest, $newManifest) as $rel) {
+            if (pc_is_protected($rel) || strncmp($rel, 'vendor/', 7) === 0 || strncmp($rel, 'storage/', 8) === 0) {
+                continue;
+            }
+            if (is_file(PC_BASE . '/' . $rel) && @unlink(PC_BASE . '/' . $rel)) {
+                $removed++;
+            }
+        }
+        if ($removed) {
+            pc_log("Видалено застарілих файлів: $removed");
+        }
+    }
 }
 
 /** Копія поточного коду (без vendor і storage), щоб можна було відкотитися вручну. */
@@ -327,77 +454,6 @@ function pc_maintenance(bool $on): void
         ]));
     } else {
         @unlink($file);
-    }
-}
-
-/** Переносить нову збірку на місце старої. */
-function pc_install_files(string $src): void
-{
-    $oldManifest = pc_manifest(PC_BASE);
-    $newManifest = pc_manifest($src);
-    $copied = 0;
-    $kept = 0;
-
-    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS));
-    foreach ($it as $f) {
-        if (!$f->isFile()) {
-            continue;
-        }
-        $rel = substr($f->getPathname(), strlen($src) + 1);
-        if (strncmp($rel, 'vendor/', 7) === 0) {
-            continue; // vendor міняємо цілком нижче
-        }
-        if (pc_is_protected($rel) && file_exists(PC_BASE . '/' . $rel)) {
-            $kept++;
-            continue;
-        }
-        if (strncmp($rel, 'storage/', 8) === 0) {
-            continue; // каркас storage потрібен лише при першому встановленні
-        }
-        $dest = PC_BASE . '/' . $rel;
-        if (!is_dir(dirname($dest))) {
-            @mkdir(dirname($dest), 0755, true);
-        }
-        if (!@copy($f->getPathname(), $dest)) {
-            throw new RuntimeException('Не вдалося записати ' . $rel . ' (права доступу?)');
-        }
-        $copied++;
-    }
-    pc_log("Скопійовано файлів: $copied, збережено твоїх: $kept");
-
-    // vendor: підміна цілої папки, щоб не лишалося сміття від видалених пакетів
-    $vNew = PC_BASE . '/vendor.new';
-    $vOld = PC_BASE . '/vendor.old';
-    pc_rrmdir($vNew);
-    pc_rrmdir($vOld);
-    if (!@rename($src . '/vendor', $vNew)) {
-        throw new RuntimeException('Не вдалося перенести vendor');
-    }
-    if (is_dir(PC_BASE . '/vendor') && !@rename(PC_BASE . '/vendor', $vOld)) {
-        throw new RuntimeException('Не вдалося прибрати старий vendor');
-    }
-    if (!@rename($vNew, PC_BASE . '/vendor')) {
-        @rename($vOld, PC_BASE . '/vendor');
-        throw new RuntimeException('Не вдалося поставити новий vendor (старий повернуто)');
-    }
-    pc_rrmdir($vOld);
-    pc_log('vendor оновлено');
-
-    // Файли, яких більше немає в новій збірці (лише ті, що ставила попередня збірка)
-    if ($oldManifest && $newManifest) {
-        $gone = array_diff($oldManifest, $newManifest);
-        $removed = 0;
-        foreach ($gone as $rel) {
-            if (!pc_safe_rel($rel) || pc_is_protected($rel) || strncmp($rel, 'vendor/', 7) === 0) {
-                continue;
-            }
-            if (is_file(PC_BASE . '/' . $rel) && @unlink(PC_BASE . '/' . $rel)) {
-                $removed++;
-            }
-        }
-        if ($removed) {
-            pc_log("Видалено застарілих файлів: $removed");
-        }
     }
 }
 
@@ -491,7 +547,6 @@ if ($tooBig) {
         if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
             $result = ['ok' => false, 'title' => 'Оновлення вже йде в іншій вкладці'];
         } else {
-            $tmp = PC_BASE . '/storage/app/update-tmp';
             $download = PC_BASE . '/storage/app/update-download.zip';
             $maintenance = false;
             try {
@@ -511,8 +566,8 @@ if ($tooBig) {
                             : 'Вибери архів або поклади update.zip поруч з artisan');
                     }
 
-                    $root = pc_extract($zipPath, $tmp);
-                    $new = pc_version($root);
+                    [$zip, $prefix] = pc_open_build($zipPath);
+                    $new = json_decode((string) $zip->getFromName($prefix . 'VERSION'), true) ?: [];
                     pc_log('Нова збірка: ' . ($new['commit'] ?? '?') . ' від ' . ($new['built_at'] ?? '?'));
                     if (empty($_POST['force']) && !empty($new['commit']) && ($version['commit'] ?? null) === $new['commit']) {
                         pc_log('Ця збірка вже встановлена. Постав галочку «Все одно», щоб перевстановити.');
@@ -521,8 +576,9 @@ if ($tooBig) {
                         pc_maintenance($maintenance = true);
                         pc_log('Сайт переведено в режим обслуговування');
                         pc_backup();
-                        pc_install_files($root);
+                        pc_apply_build($zip, $prefix);
                     }
+                    $zip->close();
                     if ($action === 'zip' && isset($zipPath) && $zipPath === PC_BASE . '/update.zip' && $result === null) {
                         @unlink(PC_BASE . '/update.zip');
                     }
@@ -539,7 +595,7 @@ if ($tooBig) {
                 pc_log('✖ ' . $e->getMessage());
                 $result = ['ok' => false, 'title' => 'Помилка: ' . $e->getMessage()];
             } finally {
-                pc_rrmdir($tmp);
+                pc_rrmdir(PC_BASE . '/storage/app/update-tmp'); // залишки старої версії скрипта
                 @unlink($download);
                 if ($maintenance) {
                     pc_maintenance(false);
