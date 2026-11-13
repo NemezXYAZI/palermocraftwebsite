@@ -16,6 +16,7 @@ Route::get('/world', [PageController::class, 'world'])->name('world');
 Route::get('/guide', [PageController::class, 'guide'])->name('guide');
 Route::get('/rules', [PageController::class, 'rules'])->name('rules');
 Route::get('/support', [PageController::class, 'support'])->name('support');
+Route::get('/mods', [PageController::class, 'mods'])->name('mods');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Старі адреси

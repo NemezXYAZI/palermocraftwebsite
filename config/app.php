@@ -80,7 +80,9 @@ return [
 
     'locale' => env('APP_LOCALE', 'uk'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    // Не з .env: базові тексти сайту — українські (вони ж ключі перекладів у lang/{en,ru}.json),
+    // тож запасна мова завжди українська. Інакше trans_choice для uk брав би англійський рядок.
+    'fallback_locale' => 'uk',
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

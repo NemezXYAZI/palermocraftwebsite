@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'game.token' => \App\Http\Middleware\GameApiToken::class,
         ]);
         $middleware->web(append: [\App\Http\Middleware\LogoutBanned::class]);
+
+        // Мова сайту: для всіх запитів (і для сторінок помилок); cookie з кодом мови не шифруємо
+        $middleware->append(\App\Http\Middleware\SetLocale::class);
+        $middleware->encryptCookies(except: [\App\Support\Locale::COOKIE]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

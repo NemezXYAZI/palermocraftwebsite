@@ -1,27 +1,27 @@
 @extends('layouts.app')
 
-@section('title', 'Правила')
-@section('description', 'Правила сервера PALERMOCRAFT: спілкування, чесна гра, чуже майно, акаунт і покарання.')
+@section('title', __('Правила'))
+@section('description', __('Правила сервера PALERMOCRAFT: спілкування, чесна гра, чуже майно, акаунт і покарання.'))
 
 @section('content')
     <section class="page-hero">
         <div class="container">
-            <p class="kicker kicker--left">Кодекс сервера</p>
-            <h1>Правила</h1>
+            <p class="kicker kicker--left">{{ __('Кодекс сервера') }}</p>
+            <h1>{{ __('Правила') }}</h1>
             <p class="lead">{{ $rules['intro'] }}</p>
-            <p class="faint mb-0"><x-icon name="clock" /> Оновлено {{ $rules['updated'] }}</p>
+            <p class="faint mb-0"><x-icon name="clock" /> {{ __('Оновлено :date', ['date' => $rules['updated']]) }}</p>
         </div>
     </section>
 
     <section class="section section--tight section--flush-top">
         <div class="container">
             <div class="with-toc">
-                <nav class="toc" aria-label="Розділи правил">
-                    <p class="toc__title">Розділи</p>
+                <nav class="toc" aria-label="{{ __('Розділи правил') }}">
+                    <p class="toc__title">{{ __('Розділи') }}</p>
                     @foreach ($rules['sections'] as $section)
                         <a href="#{{ $section['id'] }}">{{ $loop->iteration }}. {{ $section['title'] }}</a>
                     @endforeach
-                    <a href="#penalties">Покарання</a>
+                    <a href="#penalties">{{ __('Покарання') }}</a>
                 </nav>
 
                 <div>
@@ -51,9 +51,9 @@
                     <section class="rules-section" id="penalties" aria-labelledby="penalties-title">
                         <div class="rules-section__head">
                             <span class="icon-tile icon-tile--sm accent-sun"><x-icon name="gavel" /></span>
-                            <h2 id="penalties-title">Покарання</h2>
+                            <h2 id="penalties-title">{{ __('Покарання') }}</h2>
                         </div>
-                        <p class="muted">Покарання залежить від порушення й того, чи воно повторюється. Адміністрація може пропустити сходинку, якщо порушення серйозне.</p>
+                        <p class="muted">{{ __('Покарання залежить від порушення й того, чи воно повторюється. Адміністрація може пропустити сходинку, якщо порушення серйозне.') }}</p>
                         <div class="penalties">
                             @foreach ($rules['penalties'] as $penalty)
                                 <div class="penalty">
@@ -64,7 +64,7 @@
                         </div>
                         <div class="alert alert--info mt-lg">
                             <x-icon name="info" />
-                            <p>Блокування на сайті діє й у грі: заблокований акаунт не зможе увійти ні туди, ні туди.</p>
+                            <p>{{ __('Блокування на сайті діє й у грі: заблокований акаунт не зможе увійти ні туди, ні туди.') }}</p>
                         </div>
                     </section>
                 </div>

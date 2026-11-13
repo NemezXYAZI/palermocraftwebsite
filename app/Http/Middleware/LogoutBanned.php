@@ -18,7 +18,7 @@ class LogoutBanned
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect()->route('login')->withErrors(['email' => 'Акаунт заблоковано: '.($user->ban_reason ?: 'без пояснення')]);
+            return redirect()->route('login')->withErrors(['email' => __('Акаунт заблоковано: :reason', ['reason' => $user->ban_reason ?: __('без пояснення')])]);
         }
 
         return $next($request);

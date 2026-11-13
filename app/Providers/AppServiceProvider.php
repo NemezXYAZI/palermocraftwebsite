@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Мову (і Carbon) виставляє middleware SetLocale для кожного запиту
         Carbon::setLocale(app()->getLocale());
 
         Paginator::defaultView('vendor.pagination.palermo');

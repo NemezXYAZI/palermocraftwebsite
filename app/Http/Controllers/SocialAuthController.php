@@ -38,7 +38,7 @@ class SocialAuthController extends Controller
     {
         $expected = $request->session()->pull('discord_oauth_state');
         if (! $expected || ! hash_equals($expected, (string) $request->query('state')) || ! $request->filled('code')) {
-            return $this->fail($request, 'Discord: запит застарів або був скасований. Спробуйте ще раз.');
+            return $this->fail($request, __('Discord: запит застарів або був скасований. Спробуйте ще раз.'));
         }
 
         $token = Http::asForm()->timeout(10)->post('https://discord.com/api/oauth2/token', [
@@ -49,12 +49,12 @@ class SocialAuthController extends Controller
             'redirect_uri' => config('services.discord.redirect'),
         ]);
         if (! $token->successful()) {
-            return $this->fail($request, 'Discord не підтвердив вхід. Спробуйте ще раз.');
+            return $this->fail($request, __('Discord не підтвердив вхід. Спробуйте ще раз.'));
         }
 
         $me = Http::withToken($token->json('access_token'))->timeout(10)->get('https://discord.com/api/users/@me');
         if (! $me->successful()) {
-            return $this->fail($request, 'Не вдалося отримати профіль Discord.');
+            return $this->fail($request, __('Не вдалося отримати профіль Discord.'));
         }
 
         $discordId = (string) $me->json('id');
@@ -70,7 +70,7 @@ class SocialAuthController extends Controller
     public function telegramCallback(Request $request, TelegramLoginVerifier $verifier)
     {
         if (! $verifier->verify($request->query())) {
-            return $this->fail($request, 'Telegram: підпис не пройшов перевірку. Спробуйте ще раз.');
+            return $this->fail($request, __('Telegram: підпис не пройшов перевірку. Спробуйте ще раз.'));
         }
 
         $telegramId = (int) $request->query('id');
@@ -92,18 +92,18 @@ class SocialAuthController extends Controller
 
         if ($current) {
             if ($owner && $owner->id !== $current->id) {
-                return $this->fail($request, $label.' уже привʼязаний до іншого акаунта сайту.');
+                return $this->fail($request, __(':service уже привʼязаний до іншого акаунта сайту.', ['service' => $label]));
             }
             $current->update($fields);
 
-            return redirect()->route('profile.index')->with('success', $label.' успішно привʼязано.');
+            return redirect()->route('profile.index')->with('success', __(':service успішно привʼязано.', ['service' => $label]));
         }
 
         if (! $owner) {
-            return $this->fail($request, 'Цей '.$label.' ще не привʼязаний. Зареєструйтесь і привʼяжіть його в профілі.');
+            return $this->fail($request, __('Цей :service ще не привʼязаний. Зареєструйтесь і привʼяжіть його в профілі.', ['service' => $label]));
         }
         if ($owner->isBanned()) {
-            return $this->fail($request, 'Акаунт заблоковано: '.($owner->ban_reason ?: 'без пояснення'));
+            return $this->fail($request, __('Акаунт заблоковано: :reason', ['reason' => $owner->ban_reason ?: __('без пояснення')]));
         }
 
         Auth::login($owner, remember: true);

@@ -1,9 +1,9 @@
 @if ($paginator->hasPages())
-    <nav class="pagination" aria-label="Сторінки">
+    <nav class="pagination" aria-label="{{ __('Сторінки') }}">
         @if ($paginator->onFirstPage())
-            <span class="is-disabled" aria-disabled="true"><x-icon name="arrow-left" label="Попередня сторінка" /></span>
+            <span class="is-disabled" aria-disabled="true"><x-icon name="arrow-left" label="{{ __('Попередня сторінка') }}" /></span>
         @else
-            <a href="{{ $paginator->previousPageUrl() }}" rel="prev"><x-icon name="arrow-left" label="Попередня сторінка" /></a>
+            <a href="{{ $paginator->previousPageUrl() }}" rel="prev"><x-icon name="arrow-left" label="{{ __('Попередня сторінка') }}" /></a>
         @endif
 
         @foreach ($elements as $element)
@@ -22,9 +22,9 @@
         @endforeach
 
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" rel="next"><x-icon name="arrow-right" label="Наступна сторінка" /></a>
+            <a href="{{ $paginator->nextPageUrl() }}" rel="next"><x-icon name="arrow-right" label="{{ __('Наступна сторінка') }}" /></a>
         @else
-            <span class="is-disabled" aria-disabled="true"><x-icon name="arrow-right" label="Наступна сторінка" /></span>
+            <span class="is-disabled" aria-disabled="true"><x-icon name="arrow-right" label="{{ __('Наступна сторінка') }}" /></span>
         @endif
     </nav>
 @endif

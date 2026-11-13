@@ -182,6 +182,7 @@ class PalermoFeaturesTest extends TestCase
         $this->get('/world')->assertOk()->assertSee('Передісторія')->assertSee('Пісок Забуття');
         $this->get('/guide')->assertOk()->assertSee('/link КОД', false)->assertSee('Метрополія');
         $this->get('/rules')->assertOk()->assertSee('Чесна гра')->assertSee('2.1');
+        $this->get('/mods')->assertOk()->assertSee('Sodium')->assertSee('Palermo Dialogues');
         $this->get('/news')->assertOk()->assertSee('Старт сезону');
         $this->get('/news/start')->assertOk()->assertSee('Другий');
         $this->get('/login')->assertOk()->assertSee('Вхід');
@@ -260,6 +261,8 @@ class PalermoFeaturesTest extends TestCase
         $this->get('/sitemap.xml')->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->assertSee('/guide', false)
+            ->assertSee('/mods', false)
+            ->assertSee('/guide?lang=en', false)
             ->assertSee('/news/public-one', false)
             ->assertDontSee('secret-draft', false);
     }
