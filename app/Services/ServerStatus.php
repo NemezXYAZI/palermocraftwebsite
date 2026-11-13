@@ -12,11 +12,11 @@ use Throwable;
  */
 class ServerStatus
 {
-    /** @var array{online: bool, players: int, max: int, version: ?string, address: string, list: list<string>}|null */
+    /** @var array{online: bool, announced: bool, players: int, max: int, version: ?string, address: string, list: list<string>}|null */
     private ?array $memo = null;
 
     /**
-     * @return array{online: bool, players: int, max: int, version: ?string, address: string, list: list<string>}
+     * @return array{online: bool, announced: bool, players: int, max: int, version: ?string, address: string, list: list<string>}
      */
     public function get(): array
     {
@@ -24,10 +24,16 @@ class ServerStatus
             return $this->memo;
         }
 
-        $address = (string) config('palermo.server_address');
+        $address = trim((string) config('palermo.server_address'));
+
+        // Адресу ще не оголошено — нічого не питаємо
+        if ($address === '') {
+            return $this->memo = ['online' => false, 'announced' => false, 'players' => 0, 'max' => 0, 'version' => null, 'address' => '', 'list' => []];
+        }
 
         try {
-            $status = Cache::remember('palermo.server_status.v2', 60, fn () => $this->fetch($address));
+            // У ключі — адреса: після зміни PALERMO_GAME_ADDRESS старий статус не покажеться
+            $status = Cache::remember('palermo.server_status.v3:'.$address, 60, fn () => $this->fetch($address));
         } catch (Throwable) {
             // Кеш у базі недоступний (наприклад, під час оновлення) — питаємо напряму
             $status = $this->fetch($address);
@@ -58,6 +64,7 @@ class ServerStatus
 
         return [
             'online' => (bool) ($data['online'] ?? false),
+            'announced' => true,
             'players' => (int) ($data['players']['online'] ?? 0),
             'max' => (int) ($data['players']['max'] ?? 0),
             'version' => isset($data['version']) ? (string) $data['version'] : null,

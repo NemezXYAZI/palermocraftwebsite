@@ -1,7 +1,7 @@
 @php
     $pageTitle = trim($__env->yieldContent('title'));
     $fullTitle = $pageTitle !== '' ? $pageTitle.' — PALERMOCRAFT' : 'PALERMOCRAFT — Ехо Безодні';
-    $description = trim($__env->yieldContent('description')) ?: 'PALERMOCRAFT — український сюжетний SMP у світі темного фентезі. Сезон I «Ехо Безодні»: поселення, підземелля, Повелителі й дванадцять Очей Безодні. Minecraft Java '.config('palermo.game_version').', без модів.';
+    $description = trim($__env->yieldContent('description')) ?: 'PALERMOCRAFT — сюжетний SMP у світі темного фентезі. Сезон I «Ехо Безодні»: поселення з жителями, підземелля й Повелителі-боси. Minecraft Java '.config('palermo.game_version').', без модів.';
 @endphp
 <!DOCTYPE html>
 <html lang="uk">

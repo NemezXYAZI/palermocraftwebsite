@@ -40,7 +40,7 @@
 | Змінна | Що це |
 |---|---|
 | `APP_URL` | `https://palermocraft.com` |
-| `PALERMO_SERVER_ADDRESS` | адреса сервера на сайті й для статусу онлайну (`play.palermocraft.com`) |
+| `PALERMO_GAME_ADDRESS` | адреса сервера Minecraft на сайті й для статусу онлайну. Поки порожньо — сайт пише «адресу оголосимо перед стартом сезону» |
 | `PALERMO_GAME_VERSION` | версія Minecraft, яку показує сайт (`1.21.4`) |
 | `PALERMO_DISCORD_INVITE` / `PALERMO_TELEGRAM_URL` | необовʼязково: запрошення в Discord і канал/чат Telegram — зʼявляться в підвалі сайту |
 | `APP_ENV` / `APP_DEBUG` | `production` / `false` |

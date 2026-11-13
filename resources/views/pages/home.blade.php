@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('description', 'PALERMOCRAFT — український сюжетний SMP у світі темного фентезі. Сезон I «Ехо Безодні»: поселення з жителями, підземелля з особистим лутом, Повелителі-боси й дванадцять Очей Безодні. Minecraft Java '.config('palermo.game_version').', будь-який лаунчер, без модів.')
+@section('description', 'PALERMOCRAFT — сюжетний SMP у світі темного фентезі. Сезон I «Ехо Безодні»: поселення з жителями, підземелля з особистим лутом і Повелителі-боси. Minecraft Java '.config('palermo.game_version').', будь-який лаунчер, без модів.')
 
 @php
     $emberColors = ['var(--gold-1)', 'var(--violet)', 'var(--gold-2)'];
@@ -28,14 +28,14 @@
                         <x-icon name="play" /> Почати грати
                     </a>
                     <a class="btn btn--outline btn--lg" href="{{ route('world') }}">
-                        <x-icon name="book-open" /> Історія світу
+                        <x-icon name="book-open" /> Передісторія
                     </a>
                 </div>
                 <x-ip-card />
             </div>
 
             <div class="hero__visual">
-                @include('partials.emblem')
+                @include('partials.hero-visual')
             </div>
         </div>
     </section>
@@ -58,8 +58,8 @@
     {{-- Світ --}}
     <section class="section" aria-labelledby="world-title">
         <div class="container">
-            <x-section-head kicker="Світ сезону" title="Три домени, три Серця, одна Безодня" title-id="world-title"
-                            lead="Кожен Повелитель упав по-своєму. Досліджуй їхні землі, відбудовуй села й шукай Очі, що відчиняють шлях до Каеля." />
+            <x-section-head kicker="Світ сезону" title="Три краї — три Повелителі" title-id="world-title"
+                            lead="Пустеля, літні рівнини й зимові гори: кожен край памʼятає свого владику. Решту історії розкриє сам сезон." />
 
             <div class="grid grid--3">
                 @foreach ($season['domains'] as $key => $domain)
@@ -69,39 +69,12 @@
                         <h3 class="domain__name">{{ $domain['name'] }}</h3>
                         <p class="domain__lord">{{ $domain['lord'] }} — {{ $domain['lord_title'] }}</p>
                         <p class="domain__text">{{ $domain['text'] }}</p>
-                        <div class="domain__meta">
-                            <span class="domain__heart"><x-icon name="gem" /> {{ $domain['heart'] }}</span>
-                            <ul class="eye-list" aria-label="Очі домену">
-                                @foreach ($domain['eyes'] as $eye)
-                                    <li class="eye-chip"><x-icon name="eye" /> {{ $eye }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
                     </article>
                 @endforeach
             </div>
 
-            <div class="grid grid--2 mt-lg">
-                <article class="card card--accent accent-abyss path-card" data-reveal>
-                    @include('partials.sigil', ['name' => 'library', 'class' => 'domain__sigil'])
-                    <div>
-                        <p class="domain__region">{{ $season['library']['region'] }}</p>
-                        <h3 class="domain__name">{{ $season['library']['name'] }}</h3>
-                        <p class="card__text">{{ $season['library']['text'] }}</p>
-                    </div>
-                </article>
-                <article class="card card--accent accent-abyss path-card" data-reveal style="--delay: .08s">
-                    @include('partials.sigil', ['name' => 'void', 'class' => 'domain__sigil'])
-                    <div>
-                        <p class="domain__region">{{ $season['kael']['region'] }}</p>
-                        <h3 class="domain__name">{{ $season['kael']['name'] }} — {{ $season['kael']['title'] }}</h3>
-                        <p class="card__text">{{ $season['kael']['text'] }}</p>
-                    </div>
-                </article>
-            </div>
-
             <p class="text-center mt-lg">
-                <a class="btn btn--outline" href="{{ route('world') }}">Уся історія світу <x-icon name="arrow-right" /></a>
+                <a class="btn btn--outline" href="{{ route('world') }}">Передісторія світу <x-icon name="arrow-right" /></a>
             </p>
         </div>
     </section>
@@ -139,7 +112,11 @@
                 <li class="step" data-reveal style="--delay: .06s">
                     <span class="step__num">2</span>
                     <h3>Додай сервер</h3>
-                    <p>«Мережева гра» → «Додати сервер» → <code translate="no">{{ config('palermo.server_address') }}</code></p>
+                    @if ($status['announced'])
+                        <p>«Мережева гра» → «Додати сервер» → <code translate="no">{{ $status['address'] }}</code></p>
+                    @else
+                        <p>«Мережева гра» → «Додати сервер». Адресу оголосимо перед стартом сезону.</p>
+                    @endif
                 </li>
                 <li class="step" data-reveal style="--delay: .12s">
                     <span class="step__num">3</span>
@@ -149,7 +126,7 @@
                 <li class="step" data-reveal style="--delay: .18s">
                     <span class="step__num">4</span>
                     <h3>Обери шлях</h3>
-                    <p>Засновуй поселення, шукай Очі Безодні або спускайся в підземелля з друзями.</p>
+                    <p>Засновуй поселення, спускайся в підземелля з друзями або вирушай назустріч Повелителям.</p>
                 </li>
             </ol>
 
@@ -213,7 +190,11 @@
                     <div>
                         <p class="kicker kicker--left">Безодня чекає</p>
                         <h2 id="cta-title">Стань новим Мандрівником</h2>
-                        <p class="lead">Скопіюй адресу, заходь у гру й обирай свій шлях. Акаунт на сайті — для скіна, який бачать усі, і входу через Telegram чи Discord.</p>
+                        @if ($status['announced'])
+                            <p class="lead">Скопіюй адресу, заходь у гру й обирай свій шлях. Акаунт на сайті — для скіна, який бачать усі, і входу через Telegram чи Discord.</p>
+                        @else
+                            <p class="lead">Адресу сервера оголосимо перед стартом сезону. А поки створи акаунт: завантаж скін, який побачать усі, і привʼяжи Telegram чи Discord для входу.</p>
+                        @endif
                         <div class="cluster">
                             @auth
                                 <a class="btn btn--primary" href="{{ route('profile.index') }}"><x-icon name="user-round" /> Мій профіль</a>

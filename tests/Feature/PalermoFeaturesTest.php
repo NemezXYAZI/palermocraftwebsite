@@ -178,9 +178,8 @@ class PalermoFeaturesTest extends TestCase
         News::create(['title' => 'Старт сезону', 'slug' => 'start', 'body' => "Перший абзац\n\nДругий", 'published_at' => now()]);
         $this->get('/')->assertOk()
             ->assertSee('Ехо Безодні')
-            ->assertSee(config('palermo.server_address'))
             ->assertSee('Старт сезону');
-        $this->get('/world')->assertOk()->assertSee('Пісок Забуття')->assertSee('Око Забуття');
+        $this->get('/world')->assertOk()->assertSee('Передісторія')->assertSee('Пісок Забуття');
         $this->get('/guide')->assertOk()->assertSee('/link КОД', false)->assertSee('Метрополія');
         $this->get('/rules')->assertOk()->assertSee('Чесна гра')->assertSee('2.1');
         $this->get('/news')->assertOk()->assertSee('Старт сезону');
@@ -213,8 +212,30 @@ class PalermoFeaturesTest extends TestCase
         $this->get('/news')->assertSee('Відкриття сервера');
     }
 
+    public function test_address_is_hidden_until_announced(): void
+    {
+        config(['palermo.server_address' => '']);
+
+        foreach (['/', '/guide'] as $page) {
+            $this->get($page)->assertOk()
+                ->assertSee('Оголосимо перед стартом сезону')
+                ->assertDontSee('data-copy="play.', false);
+        }
+        $this->get('/')->assertSee('Скоро старт');
+        Http::assertNothingSent();
+    }
+
+    public function test_announced_address_can_be_copied(): void
+    {
+        config(['palermo.server_address' => 'mc.example.test']);
+
+        $this->get('/')->assertOk()->assertSee('data-copy="mc.example.test"', false)->assertSee('Сервер зараз офлайн');
+        $this->get('/guide')->assertOk()->assertSee('<code translate="no">mc.example.test</code>', false);
+    }
+
     public function test_home_shows_who_is_online(): void
     {
+        config(['palermo.server_address' => 'mc.example.test']);
         $this->serverResponse = [
             'online' => true,
             'version' => 'Purpur 1.21.4',

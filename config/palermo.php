@@ -5,7 +5,9 @@ return [
     /*
     | Адреса ігрового сервера для статусу на головній сторінці (через api.mcsrvstat.us).
     */
-    'server_address' => env('PALERMO_SERVER_ADDRESS', 'play.palermocraft.com'),
+    // Адреса сервера Minecraft для гравців. Порожньо — сайт пише «адресу оголосимо
+    // перед стартом сезону» і не перевіряє онлайн. (Старий PALERMO_SERVER_ADDRESS не читається.)
+    'server_address' => (string) env('PALERMO_GAME_ADDRESS', ''),
 
     /*
     | Версія Minecraft Java, з якою заходять на сервер (показується на сайті).

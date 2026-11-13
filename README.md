@@ -9,7 +9,7 @@ Laravel 12 без збирання фронтенду: власна дизайн
 | Розділ | Адреса | Звідки тексти |
 |---|---|---|
 | Головна: сезон, адреса сервера, хто онлайн, новини | `/` | `resources/content/season.php` |
-| Світ: лор, домени, 12 Очей, відбудова | `/world` | `resources/content/season.php` |
+| Світ: передісторія й три краї | `/world` | `resources/content/season.php` |
 | Путівник: як зайти, вхід без паролів, поселення, команди, питання | `/guide` | `resources/content/season.php` |
 | Правила | `/rules` | `resources/content/rules.php` |
 | Підтримка (замість магазину) | `/support` | `resources/views/pages/support.blade.php` |
