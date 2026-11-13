@@ -132,22 +132,22 @@
 
             <ol class="steps" style="--steps: 4">
                 <li class="step" data-reveal>
-                    <span class="step__num">I</span>
+                    <span class="step__num">1</span>
                     <h3>Запусти Minecraft</h3>
                     <p>Java Edition {{ config('palermo.game_version') }} у будь-якому лаунчері — офіційному чи піратському.</p>
                 </li>
                 <li class="step" data-reveal style="--delay: .06s">
-                    <span class="step__num">II</span>
+                    <span class="step__num">2</span>
                     <h3>Додай сервер</h3>
                     <p>«Мережева гра» → «Додати сервер» → <code translate="no">{{ config('palermo.server_address') }}</code></p>
                 </li>
                 <li class="step" data-reveal style="--delay: .12s">
-                    <span class="step__num">III</span>
+                    <span class="step__num">3</span>
                     <h3>Підтверди вхід</h3>
                     <p>Під час першого входу надішли код боту в Telegram чи Discord — далі він впускатиме тебе однією кнопкою.</p>
                 </li>
                 <li class="step" data-reveal style="--delay: .18s">
-                    <span class="step__num">IV</span>
+                    <span class="step__num">4</span>
                     <h3>Обери шлях</h3>
                     <p>Засновуй поселення, шукай Очі Безодні або спускайся в підземелля з друзями.</p>
                 </li>

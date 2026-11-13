@@ -44,14 +44,14 @@
                     <h2 id="join-title">Як зайти на сервер</h2>
                     <div class="guide-steps">
                         <article class="guide-step">
-                            <span class="step__num">I</span>
+                            <span class="step__num">1</span>
                             <div>
                                 <h3>Запусти Minecraft Java {{ $version }}</h3>
                                 <p class="muted">Підійде будь-який лаунчер: офіційний, TLauncher, Prism чи інший. Ліцензія не потрібна, моди теж. Клієнт лишається ванільним — тож гра піде навіть на слабкому компʼютері.</p>
                             </div>
                         </article>
                         <article class="guide-step">
-                            <span class="step__num">II</span>
+                            <span class="step__num">2</span>
                             <div>
                                 <h3>Додай сервер</h3>
                                 <p class="muted">У головному меню: «Мережева гра» → «Додати сервер». Назва — будь-яка, адреса:</p>
@@ -62,14 +62,14 @@
                             </div>
                         </article>
                         <article class="guide-step">
-                            <span class="step__num">III</span>
+                            <span class="step__num">3</span>
                             <div>
                                 <h3>Підтверди, що це ти</h3>
                                 <p class="muted">Під час першого входу сервер покаже код. Надішли його нашому боту в Telegram або Discord командою <code>/link КОД</code> — і нік закріпиться за тобою. Як це працює далі — <a href="#auth">трохи нижче</a>.</p>
                             </div>
                         </article>
                         <article class="guide-step">
-                            <span class="step__num">IV</span>
+                            <span class="step__num">4</span>
                             <div>
                                 <h3>Обери свій шлях</h3>
                                 <p class="muted">Відкрий Кодекс Мандрівника (<code>/book</code>), познайомся зі старійшинами сіл, збери друзів у команду (<code>/team</code>) і засновуй поселення (<code>/lands</code>).</p>
@@ -202,7 +202,7 @@
                     <tbody>
                         @foreach ($season['ranks'] as $rank)
                             <tr>
-                                <td><span class="num">{{ ['I', 'II', 'III', 'IV', 'V', 'VI'][$rank['level'] - 1] }}</span> <strong>{{ $rank['title'] }}</strong></td>
+                                <td><span class="num">{{ $rank['level'] }}</span> <strong>{{ $rank['title'] }}</strong></td>
                                 <td>до {{ $rank['buildings'] }}</td>
                                 <td>до {{ $rank['workers'] }}</td>
                                 <td>{{ $rank['claims'] }}</td>

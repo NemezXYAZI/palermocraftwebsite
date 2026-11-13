@@ -2,7 +2,7 @@
 
 Сайт сервера **PALERMOCRAFT** — Сезон I «Ехо Безодні».
 
-Laravel 12 без збирання фронтенду: власна дизайн-система (`public/css/palermo.css`), трохи JavaScript без залежностей (`public/js/palermo.js`), шрифти лежать поруч із сайтом. Тож хостингу без Node.js вистачає, а сторінки легкі навіть для слабких ПК.
+Laravel 12 без збирання фронтенду: власна дизайн-система (`public/css/palermo.css`), трохи JavaScript без залежностей (`public/js/palermo.js`), шрифт Comfortaa лежить поруч із сайтом. Тож хостингу без Node.js вистачає, а сторінки легкі навіть для слабких ПК.
 
 ## Що є на сайті
 
@@ -44,7 +44,7 @@ cPanel без SSH: архів зі збіркою та сторінка `update.
 
 ## Сторонні ресурси
 
-- Шрифти Inter і Cormorant Garamond — SIL Open Font License 1.1 (`public/fonts`).
+- Шрифт Comfortaa — SIL Open Font License 1.1 (`public/fonts`).
 - Іконки Lucide — ISC (`resources/icons/LICENSE`).
 - Логотипи Discord і Telegram — Simple Icons, CC0 (`resources/icons/brands`).
 - 3D-перегляд скінів skinview3d — MIT (`public/vendor/skinview3d`).

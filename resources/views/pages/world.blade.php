@@ -4,7 +4,6 @@
 @section('description', 'Лор сезону «Ехо Безодні»: троє Повелителів — Азраель, Еліор і Веларіс, Серця Пустоти, подвиг Першого Мандрівника Каеля, дванадцять Очей Безодні та Загублена Бібліотека.')
 
 @php
-    $romans = ['I', 'II', 'III', 'IV', 'V'];
     $domainIcons = ['sun' => 'sun', 'life' => 'sprout', 'frost' => 'snowflake'];
 @endphp
 
@@ -24,7 +23,7 @@
             <h2 class="sr-only" id="lore-title">Історія світу</h2>
             @foreach ($season['chapters'] as $chapter)
                 <article class="lore-chapter" data-reveal>
-                    <div class="lore-chapter__num" aria-hidden="true">{{ $romans[$loop->index] }}</div>
+                    <div class="lore-chapter__num" aria-hidden="true">{{ sprintf('%02d', $loop->iteration) }}</div>
                     <div>
                         <h3>{{ $chapter['title'] }}</h3>
                         <div class="prose {{ $loop->first ? 'prose--dropcap' : '' }}">

@@ -31,8 +31,7 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="32x32">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
-    <link rel="preload" href="{{ asset('fonts/inter-cyrillic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ asset('fonts/cormorant-garamond-cyrillic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('fonts/comfortaa-cyrillic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ \App\Support\Assets::url('css/palermo.css') }}">
     <script>document.documentElement.classList.add('js');</script>
     <script src="{{ \App\Support\Assets::url('js/palermo.js') }}" defer></script>
