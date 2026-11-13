@@ -1,95 +1,233 @@
 @extends('layouts.app')
 
-@section('title', 'Мій скін - PalermoCraft')
+@section('title', 'Мій скін')
+@section('noindex', true)
+
+@php
+    $status = match ($skin?->status) {
+        'approved' => ['badge--success', 'circle-check', 'Схвалено'],
+        'pending' => ['badge--warn', 'clock', 'На перевірці'],
+        'rejected' => ['badge--danger', 'circle-x', 'Відхилено'],
+        default => ['badge--violet', 'sparkles', 'Стандартний вигляд'],
+    };
+    $maxKb = (int) config('palermo.skins.max_kb');
+@endphp
 
 @section('content')
-    <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8 w-full">
-        <div class="max-w-5xl mx-auto">
-            <a href="{{ route('profile.index') }}" class="text-sm text-gray-400 hover:text-palermo-green">← До профілю</a>
-            <h2 class="text-3xl font-bold text-palermo-green mb-8 text-center">Мій скін</h2>
+    <section class="section section--tight">
+        <div class="container">
+            <a class="back-link" href="{{ route('profile.index') }}"><x-icon name="arrow-left" /> До профілю</a>
+            <h1 class="mt-lg" style="margin-top: 14px">Мій скін</h1>
+            <p class="lead">Скін бачать усі гравці — з ліцензійних і піратських лаунчерів, без модів.</p>
 
             @include('partials.flash')
 
-            <div class="grid md:grid-cols-2 gap-8">
-                <section class="bg-palermo-card border border-gray-800 rounded-2xl p-6 flex flex-col items-center">
-                    @if ($skin)
-                        <canvas id="skin-viewer" class="rounded-xl bg-gray-900"></canvas>
-                        <div class="mt-4 text-center">
-                            @switch($skin->status)
-                                @case('approved')
-                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-palermo-green/10 text-palermo-green border border-palermo-green/40">Схвалено</span>
-                                    @break
-                                @case('pending')
-                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-yellow-900/30 text-yellow-300 border border-yellow-700/40">На перевірці</span>
-                                    @break
-                                @default
-                                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-red-900/30 text-red-300 border border-red-700/40">Відхилено</span>
-                                    @if ($skin->rejection_reason)
-                                        <p class="text-xs text-red-300 mt-2">{{ $skin->rejection_reason }}</p>
-                                    @endif
-                            @endswitch
-                            <p class="text-xs text-gray-500 mt-2">Модель: {{ $skin->model === 'slim' ? 'Alex (тонкі руки)' : 'Steve (класична)' }}</p>
-                            @if ($skin->isApproved() && ! $skin->isSigned())
-                                <p class="text-xs text-yellow-300 mt-2">Поки що скін бачать лише гравці з модом PalermoClient.</p>
-                            @endif
+            <div class="skin-layout mt-lg">
+                <div class="stack">
+                    <div class="skin-stage" data-skin-stage>
+                        <span class="skin-stage__label badge {{ $status[0] }}" data-skin-badge>
+                            <x-icon :name="$status[1]" /> <span data-skin-badge-text>{{ $status[2] }}</span>
+                        </span>
+                        <canvas id="skin-viewer" aria-label="Тривимірний перегляд скіна. Перетягни, щоб повернути."></canvas>
+                        <div class="skin-stage__tools">
+                            <button type="button" class="btn btn--ghost btn--sm btn--icon" data-skin-toggle aria-label="Зупинити анімацію" aria-pressed="false">
+                                <x-icon name="pause" class="icon-pause" />
+                                <x-icon name="play" class="icon-play" />
+                            </button>
                         </div>
-                        <form method="POST" action="{{ route('profile.skin.destroy') }}" class="mt-4">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-sm text-red-400 hover:text-red-300">Видалити скін</button>
-                        </form>
-                    @else
-                        <div class="h-80 flex items-center justify-center text-gray-500 text-center">
-                            Скін ще не завантажено.<br>У грі буде стандартний вигляд.
+                        <noscript><p class="muted">Для 3D-перегляду увімкни JavaScript.</p></noscript>
+                    </div>
+
+                    @if ($skin)
+                        <div class="card card--flat">
+                            <dl class="kv">
+                                <dt>Модель</dt>
+                                <dd>{{ $skin->model === 'slim' ? 'Alex — тонкі руки' : 'Steve — класична' }}</dd>
+                                <dt>Оновлено</dt>
+                                <dd>{{ $skin->updated_at->translatedFormat('j F Y, H:i') }}</dd>
+                                @if ($skin->status === 'rejected' && $skin->rejection_reason)
+                                    <dt>Причина</dt>
+                                    <dd>{{ $skin->rejection_reason }}</dd>
+                                @endif
+                            </dl>
+                            @if ($skin->isApproved() && ! $skin->isSigned())
+                                <div class="alert alert--info mt-lg">
+                                    <x-icon name="info" />
+                                    <p>Скін схвалено, але ще не підписано — поки його бачать лише гравці з модом PalermoClient. Підпис зʼявиться автоматично.</p>
+                                </div>
+                            @endif
+                            <form method="POST" action="{{ route('profile.skin.destroy') }}" class="mt-lg">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn--danger btn--sm" data-confirm="Точно видалити скін?"><x-icon name="trash-2" /> Видалити скін</button>
+                            </form>
                         </div>
                     @endif
-                </section>
+                </div>
 
-                <section class="bg-palermo-card border border-gray-800 rounded-2xl p-6">
-                    <h3 class="text-xl font-bold mb-4">Завантажити скін</h3>
+                <div class="card">
+                    <h2 class="panel-title"><x-icon name="upload" /> Новий скін</h2>
+
                     @unless ($user->minecraft_name)
-                        <div class="bg-yellow-900/20 border border-yellow-700/40 text-yellow-200 rounded-xl p-4 text-sm mb-4">
-                            Спершу привʼяжіть нік у <a href="{{ route('profile.index') }}" class="underline">профілі</a>, інакше сервер не знатиме, чий це скін.
+                        <div class="alert alert--warn mt-lg">
+                            <x-icon name="triangle-alert" />
+                            <p>Спершу <a href="{{ route('profile.index') }}#game">привʼяжи нік</a> у профілі — інакше сервер не знатиме, чий це скін.</p>
                         </div>
                     @endunless
-                    <form method="POST" action="{{ route('profile.skin.upload') }}" enctype="multipart/form-data" class="space-y-5">
+
+                    <form method="POST" action="{{ route('profile.skin.upload') }}" enctype="multipart/form-data" class="form mt-lg" data-skin-form>
                         @csrf
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">PNG 64×64 або 64×32, до {{ config('palermo.skins.max_kb') }} КБ</label>
-                            <input type="file" name="skin" accept="image/png" required
-                                   class="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-gray-800 file:text-palermo-green">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-2">Модель</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2"><input type="radio" name="model" value="classic" checked> Steve (класична)</label>
-                                <label class="flex items-center gap-2"><input type="radio" name="model" value="slim" @checked($skin?->model === 'slim')> Alex (тонкі руки)</label>
+                        <label class="dropzone" data-dropzone>
+                            <x-icon name="image" />
+                            <strong>Перетягни PNG сюди або натисни, щоб вибрати</strong>
+                            <span class="help">64×64 або 64×32 пікселі, до {{ $maxKb }} КБ</span>
+                            <span class="dropzone__file" data-dropzone-file></span>
+                            <input type="file" name="skin" accept="image/png" required data-skin-file>
+                        </label>
+                        <p class="field-error" data-skin-error hidden></p>
+
+                        <fieldset class="field" style="border: 0; padding: 0; margin: 0">
+                            <legend class="label" style="margin-bottom: 8px">Модель</legend>
+                            <div class="choice-grid">
+                                <label class="choice">
+                                    <input type="radio" name="model" value="classic" @checked(old('model', $skin?->model ?? 'classic') !== 'slim')>
+                                    <span class="choice__box"><strong>Steve</strong><span>Класичні руки, 4 пікселі</span></span>
+                                </label>
+                                <label class="choice">
+                                    <input type="radio" name="model" value="slim" @checked(old('model', $skin?->model) === 'slim')>
+                                    <span class="choice__box"><strong>Alex</strong><span>Тонкі руки, 3 пікселі</span></span>
+                                </label>
                             </div>
-                        </div>
-                        <button type="submit" class="w-full bg-palermo-green text-black font-bold py-3 rounded-xl hover:bg-green-500 transition-colors uppercase">Завантажити</button>
+                        </fieldset>
+
+                        <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="upload" /> Завантажити</button>
                     </form>
-                    <p class="text-xs text-gray-500 mt-4">
-                        Скін бачать усі гравці — і з ліцензійного, і з піратського лаунчера, без модів.
-                        @if (config('palermo.skins.require_approval')) Перед появою в грі його перевіряє модератор. @endif
-                    </p>
-                </section>
+
+                    <ul class="check-list mt-lg">
+                        <li><x-icon name="check" /> Обраний файл одразу видно в 3D-перегляді</li>
+                        <li><x-icon name="check" /> Працює для всіх лаунчерів, без модів</li>
+                        @if (config('palermo.skins.require_approval'))
+                            <li><x-icon name="clock" class="is-no" /> Перед появою в грі скін перевіряє модератор</li>
+                        @endif
+                    </ul>
+                </div>
             </div>
         </div>
-    </main>
+    </section>
 @endsection
 
-@if ($skin)
-    @push('javascripts')
-        <script src="https://unpkg.com/skinview3d@3.1.0/bundles/skinview3d.bundle.js"></script>
-        <script>
-            const viewer = new skinview3d.SkinViewer({
-                canvas: document.getElementById('skin-viewer'),
-                width: 300, height: 400,
-                skin: @json(route('skins.preview', $skin)) + '?v={{ $skin->hash }}',
-                model: @json($skin->model === 'slim' ? 'slim' : 'default'),
-            });
-            viewer.animation = new skinview3d.WalkingAnimation();
+@push('scripts')
+    <script src="{{ \App\Support\Assets::url('vendor/skinview3d/skinview3d.bundle.js') }}"></script>
+    <script>
+        (function () {
+            var canvas = document.getElementById('skin-viewer');
+            var stage = document.querySelector('[data-skin-stage]');
+            if (!canvas || !stage || !window.skinview3d) return;
+
+            var current = @json($skin ? route('skins.preview', $skin).'?v='.$skin->hash : null);
+            var currentModel = @json($skin?->model === 'slim' ? 'slim' : 'default');
+            var maxBytes = {{ $maxKb }} * 1024;
+
+            // Мандрівник у каптурі — замість стандартного скіна, поки свого немає
+            function wanderer() {
+                var c = document.createElement('canvas');
+                c.width = 64; c.height = 64;
+                var g = c.getContext('2d');
+                function f(x, y, w, h, col) { g.fillStyle = col; g.fillRect(x, y, w, h); }
+                f(0, 0, 32, 16, '#1a1426');
+                f(8, 8, 8, 8, '#0a0711');
+                f(10, 12, 1, 1, '#c7b3ff'); f(13, 12, 1, 1, '#c7b3ff');
+                f(16, 16, 24, 16, '#231b33');
+                f(20, 20, 8, 12, '#2a2140');
+                f(23, 20, 2, 12, '#c99a4a');
+                f(40, 16, 16, 16, '#1d1729');
+                f(32, 48, 16, 16, '#1d1729');
+                f(0, 16, 16, 16, '#141020');
+                f(16, 48, 16, 16, '#141020');
+                f(32, 0, 32, 16, '#2c2240');
+                g.clearRect(40, 8, 8, 8);
+                f(40, 8, 8, 2, '#2c2240');
+                f(40, 10, 1, 6, '#2c2240'); f(47, 10, 1, 6, '#2c2240');
+                return c;
+            }
+
+            var viewer = new skinview3d.SkinViewer({ canvas: canvas, width: 320, height: 420 });
+            viewer.zoom = 0.86;
+            viewer.fov = 48;
             viewer.autoRotate = true;
-        </script>
-    @endpush
-@endif
+            viewer.autoRotateSpeed = 0.55;
+            viewer.animation = new skinview3d.WalkingAnimation();
+            viewer.animation.speed = 0.6;
+            viewer.loadSkin(current || wanderer(), { model: currentModel });
+
+            function resize() {
+                var w = Math.max(220, Math.min(stage.clientWidth - 24, 360));
+                viewer.setSize(w, Math.round(w * 1.3));
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            var toggle = document.querySelector('[data-skin-toggle]');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    var paused = !viewer.animation.paused;
+                    viewer.animation.paused = paused;
+                    viewer.autoRotate = !paused;
+                    toggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
+                    toggle.setAttribute('aria-label', paused ? 'Запустити анімацію' : 'Зупинити анімацію');
+                    toggle.classList.toggle('is-paused', paused);
+                });
+            }
+
+            var form = document.querySelector('[data-skin-form]');
+            var fileInput = document.querySelector('[data-skin-file]');
+            var errorBox = document.querySelector('[data-skin-error]');
+            var badgeText = document.querySelector('[data-skin-badge-text]');
+            var preview = null;
+
+            function model() {
+                var checked = form.querySelector('input[name="model"]:checked');
+                return checked && checked.value === 'slim' ? 'slim' : 'default';
+            }
+            function showError(text) {
+                errorBox.textContent = text;
+                errorBox.hidden = !text;
+            }
+
+            form.querySelectorAll('input[name="model"]').forEach(function (radio) {
+                radio.addEventListener('change', function () {
+                    viewer.loadSkin(preview || current || wanderer(), { model: model() });
+                });
+            });
+
+            fileInput.addEventListener('change', function () {
+                showError('');
+                var file = fileInput.files && fileInput.files[0];
+                if (!file) return;
+                if (file.type && file.type !== 'image/png') {
+                    showError('Потрібен файл PNG.');
+                    fileInput.value = '';
+                    return;
+                }
+                if (file.size > maxBytes) {
+                    showError('Файл завеликий: до {{ $maxKb }} КБ.');
+                    fileInput.value = '';
+                    return;
+                }
+                var img = new Image();
+                img.onload = function () {
+                    if (img.width !== 64 || (img.height !== 64 && img.height !== 32)) {
+                        showError('Розмір скіна має бути 64×64 або 64×32 пікселі, а цей — ' + img.width + '×' + img.height + '.');
+                        fileInput.value = '';
+                        return;
+                    }
+                    preview = img;
+                    viewer.loadSkin(img, { model: model() });
+                    if (badgeText) badgeText.textContent = 'Попередній перегляд';
+                };
+                img.onerror = function () { showError('Не вдалося прочитати зображення.'); };
+                img.src = URL.createObjectURL(file);
+            });
+        })();
+    </script>
+@endpush

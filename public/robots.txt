@@ -1,2 +1,6 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /profile
+Disallow: /update.php
+
+Sitemap: https://palermocraft.com/sitemap.xml

@@ -1,54 +1,68 @@
 @extends('admin.layout')
 
-@section('title', $target->name.' - Адмін-панель')
+@section('title', $target->name.' — адмін-панель')
+
+@php
+    $targetSkin = $target->skin;
+    $targetAvatar = $targetSkin ? route('skins.preview', $targetSkin).'?v='.$targetSkin->hash : null;
+@endphp
 
 @section('admin')
-    <a href="{{ route('admin.users.index') }}" class="text-sm text-gray-400 hover:text-palermo-green">← Гравці</a>
-    <h2 class="text-2xl font-bold mt-2 mb-6">{{ $target->name }}
-        @if ($target->isBanned()) <span class="text-sm text-red-400 align-middle">заблоковано</span> @endif
-    </h2>
-
-    <div class="grid lg:grid-cols-2 gap-6">
-        <div class="bg-palermo-card border border-gray-800 rounded-2xl p-6 space-y-2 text-sm">
-            <p><span class="text-gray-400">Email:</span> {{ $target->email }}</p>
-            <p><span class="text-gray-400">Нік у грі:</span> {{ $target->minecraft_name ?? 'не привʼязано' }}</p>
-            <p><span class="text-gray-400">UUID:</span> <span class="font-mono text-xs">{{ $target->minecraft_uuid ?? '—' }}</span></p>
-            <p><span class="text-gray-400">Discord:</span> {{ $target->discord_username ?? '—' }} @if($target->discord_id)<span class="text-xs text-gray-500">({{ $target->discord_id }})</span>@endif</p>
-            <p><span class="text-gray-400">Telegram:</span> {{ $target->telegram_username ?? '—' }} @if($target->telegram_id)<span class="text-xs text-gray-500">({{ $target->telegram_id }})</span>@endif</p>
-            <p><span class="text-gray-400">Баланс:</span> {{ $target->balance }}</p>
-            <p><span class="text-gray-400">Скін:</span> {{ $target->skin?->status ?? 'немає' }}</p>
-            <p><span class="text-gray-400">Зареєстровано:</span> {{ $target->created_at->format('d.m.Y H:i') }}</p>
+    <a class="back-link" href="{{ route('admin.users.index') }}"><x-icon name="arrow-left" /> Гравці</a>
+    <div class="admin__head" style="margin-top: 12px">
+        <div class="cluster">
+            <x-head :name="$target->minecraft_name ?: $target->name" :src="$targetAvatar" size="52" />
+            <h1>{{ $target->name }}</h1>
+            @if ($target->isBanned())
+                <span class="badge badge--danger">заблоковано</span>
+            @endif
         </div>
+    </div>
 
-        <div class="space-y-6">
+    <div class="grid grid--2" style="align-items: start">
+        <section class="card">
+            <dl class="kv">
+                <dt>Email</dt><dd>{{ $target->email }}</dd>
+                <dt>Нік у грі</dt><dd>{{ $target->minecraft_name ?? 'не привʼязано' }}</dd>
+                <dt>UUID</dt><dd><code>{{ $target->minecraft_uuid ?? '—' }}</code></dd>
+                <dt>Discord</dt><dd>{{ $target->discord_username ?? '—' }} @if ($target->discord_id)<span class="table__sub">{{ $target->discord_id }}</span>@endif</dd>
+                <dt>Telegram</dt><dd>{{ $target->telegram_username ?? '—' }} @if ($target->telegram_id)<span class="table__sub">{{ $target->telegram_id }}</span>@endif</dd>
+                <dt>Скін</dt><dd>{{ ['approved' => 'схвалено', 'pending' => 'на перевірці', 'rejected' => 'відхилено'][$targetSkin?->status] ?? 'немає' }}</dd>
+                <dt>Реєстрація</dt><dd>{{ $target->created_at->format('d.m.Y H:i') }}</dd>
+            </dl>
+        </section>
+
+        <div class="stack">
             @if (auth()->user()->isAdmin())
-                <form method="POST" action="{{ route('admin.users.role', $target) }}" class="bg-palermo-card border border-gray-800 rounded-2xl p-6 flex gap-3 items-end">
+                <form method="POST" action="{{ route('admin.users.role', $target) }}" class="card form">
                     @csrf
-                    <div class="flex-1">
-                        <label class="block text-sm text-gray-400 mb-2">Роль</label>
-                        <select name="role" class="w-full bg-gray-900 border border-gray-700 px-3 py-2 rounded-xl">
+                    <div class="field">
+                        <label class="label" for="role">Роль</label>
+                        <select id="role" name="role" class="select">
                             @foreach (\App\Models\User::ROLES as $role)
                                 <option value="{{ $role }}" @selected($target->role === $role)>{{ ['player' => 'Гравець', 'moderator' => 'Модератор', 'admin' => 'Адміністратор'][$role] }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <button class="bg-palermo-green text-black font-bold px-4 py-2 rounded-xl">Зберегти</button>
+                    <div><button class="btn btn--outline">Зберегти роль</button></div>
                 </form>
             @endif
 
             @if ($target->isBanned())
-                <form method="POST" action="{{ route('admin.users.unban', $target) }}" class="bg-palermo-card border border-red-900/50 rounded-2xl p-6">
+                <form method="POST" action="{{ route('admin.users.unban', $target) }}" class="card card--accent accent-sun form">
                     @csrf
-                    <p class="text-sm text-red-300 mb-3">Причина: {{ $target->ban_reason }} ({{ $target->banned_at->format('d.m.Y H:i') }})</p>
-                    <button class="bg-gray-800 text-white font-bold px-4 py-2 rounded-xl hover:bg-gray-700">Зняти блокування</button>
+                    <p class="mb-0"><strong>Причина:</strong> {{ $target->ban_reason }}</p>
+                    <p class="faint mb-0">Заблоковано {{ $target->banned_at->format('d.m.Y H:i') }}</p>
+                    <div><button class="btn btn--success">Зняти блокування</button></div>
                 </form>
             @else
-                <form method="POST" action="{{ route('admin.users.ban', $target) }}" class="bg-palermo-card border border-gray-800 rounded-2xl p-6 space-y-3">
+                <form method="POST" action="{{ route('admin.users.ban', $target) }}" class="card form">
                     @csrf
-                    <label class="block text-sm text-gray-400">Заблокувати на сайті й у грі</label>
-                    <input type="text" name="reason" required maxlength="255" placeholder="Причина (побачить гравець)"
-                           class="w-full bg-gray-900 border border-gray-700 px-4 py-2 rounded-xl focus:outline-none focus:border-red-500">
-                    <button class="bg-red-900/60 text-red-200 font-bold px-4 py-2 rounded-xl hover:bg-red-900">Заблокувати</button>
+                    <div class="field">
+                        <label class="label" for="reason">Заблокувати на сайті й у грі</label>
+                        <input id="reason" type="text" name="reason" required maxlength="255" placeholder="Причина — її побачить гравець" class="input">
+                    </div>
+                    <div><button class="btn btn--danger" data-confirm="Точно заблокувати?"><x-icon name="ban" /> Заблокувати</button></div>
                 </form>
             @endif
         </div>

@@ -1,300 +1,250 @@
 @extends('layouts.app')
 
-@section('title', 'Особистий кабінет - PalermoCraft')
+@section('title', 'Профіль')
+@section('noindex', true)
+
+@php
+    $skin = $user->skin;
+    $avatar = $skin ? route('skins.preview', $skin).'?v='.$skin->hash : null;
+    $displayName = $user->minecraft_name ?: $user->name;
+    $roleLabels = ['player' => 'Гравець', 'moderator' => 'Модератор', 'admin' => 'Адміністратор'];
+    $steps = [
+        ['done' => filled($user->minecraft_name), 'title' => 'Привʼяжи нік у грі', 'text' => 'Отримай код і напиши в грі /sitelink КОД.', 'href' => '#game'],
+        ['done' => filled($user->telegram_id) || filled($user->discord_id), 'title' => 'Підключи Telegram або Discord', 'text' => 'Бот підтверджуватиме вхід у гру однією кнопкою.', 'href' => '#connections'],
+        ['done' => (bool) $skin, 'title' => 'Завантаж скін', 'text' => 'Його побачать усі гравці після перевірки.', 'href' => route('profile.skin')],
+    ];
+    $done = collect($steps)->where('done', true)->count();
+    $discordEnabled = filled(config('services.discord.client_id'));
+    $telegramBot = config('services.telegram.bot_username');
+    $skinStatus = match ($skin?->status) {
+        'approved' => ['badge--success', 'Схвалено'],
+        'pending' => ['badge--warn', 'На перевірці'],
+        'rejected' => ['badge--danger', 'Відхилено'],
+        default => ['', 'Не завантажено'],
+    };
+@endphp
 
 @section('content')
-    <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8 w-full">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-3xl font-bold text-palermo-green mb-8 text-center">Особистий кабінет</h2>
+    <section class="section section--tight">
+        <div class="container">
+            @include('partials.flash')
 
-            @if (session('success'))
-                <div class="mb-6 bg-palermo-green/10 border border-palermo-green/40 text-palermo-green rounded-xl p-4 text-sm">
-                    {{ session('success') }}
+            <div class="card profile-hero">
+                <x-head :name="$displayName" :src="$avatar" size="92" />
+                <div class="profile-hero__info">
+                    <p class="kicker kicker--left">Профіль Мандрівника</p>
+                    <h1 class="profile-hero__name">{{ $user->name }}</h1>
+                    <div class="cluster cluster--sm">
+                        <span class="badge badge--gold">{{ $roleLabels[$user->role] ?? 'Гравець' }}</span>
+                        @if ($user->minecraft_name)
+                            <span class="badge badge--success"><x-icon name="gamepad-2" /> {{ $user->minecraft_name }}</span>
+                        @else
+                            <span class="badge badge--warn"><x-icon name="unlink" /> Нік не привʼязано</span>
+                        @endif
+                        @if ($user->telegram_id)
+                            <span class="badge"><x-brand-icon name="telegram" /> Telegram</span>
+                        @endif
+                        @if ($user->discord_id)
+                            <span class="badge"><x-brand-icon name="discord" /> Discord</span>
+                        @endif
+                        <span class="badge">З нами з {{ $user->created_at->translatedFormat('F Y') }}</span>
+                    </div>
                 </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="mb-6 bg-red-900/30 border border-red-700/50 text-red-300 rounded-xl p-4 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
-
-            <div class="flex flex-col lg:flex-row gap-8">
-                <aside class="lg:w-1/4 bg-palermo-card p-4 rounded-2xl flex flex-col gap-2 h-fit border border-gray-800">
-                    <button onclick="switchProfileTab('info')" id="tab-info" class="text-left px-4 py-3 rounded-xl bg-gray-800 text-palermo-green font-bold transition-colors">
-                        Основна інформація
-                    </button>
-
-                    <button onclick="switchProfileTab('balance')" id="tab-balance" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-gray-300">
-                        Поповнення балансу
-                    </button>
-
-                    <button onclick="switchProfileTab('inventory')" id="tab-inventory" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-gray-300">
-                        Інвентар
-                    </button>
-
-                    <a href="{{ route('profile.skin') }}" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-gray-300">
-                        Мій скін
-                    </a>
-
+                <div class="cluster">
+                    <a class="btn btn--outline" href="{{ route('profile.skin') }}"><x-icon name="shirt" /> Мій скін</a>
                     @if ($user->isStaff())
-                        <a href="{{ route('admin.dashboard') }}" class="text-left px-4 py-3 rounded-xl hover:bg-gray-800 transition-colors text-yellow-300">
-                            Адмін-панель
-                        </a>
+                        <a class="btn btn--ghost" href="{{ route('admin.dashboard') }}"><x-icon name="shield" /> Адмін-панель</a>
                     @endif
+                </div>
+            </div>
 
-                    <form method="POST" action="{{ route('logout') }}" class="mt-4">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-4 py-3 rounded-xl hover:bg-red-900/50 text-red-500 transition-colors border border-red-900/30">
-                            Вихід
-                        </button>
-                    </form>
-                </aside>
-
-                <section class="lg:w-3/4 bg-palermo-card p-6 md:p-8 rounded-2xl border border-gray-800 min-h-[500px]">
-
-                    <div id="content-info" class="block">
-                        <h3 class="text-xl font-bold mb-6 border-b border-gray-700 pb-2">Основна інформація</h3>
-
-                        <div class="grid md:grid-cols-3 gap-4 mb-8">
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                                <p class="text-gray-400 text-sm mb-1">Нікнейм</p>
-                                <p class="text-xl font-bold">{{ $user->name }}</p>
-                            </div>
-
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-                                <p class="text-gray-400 text-sm mb-1">Email</p>
-                                <p class="text-sm font-bold break-all">{{ $user->email }}</p>
-                            </div>
-
-                            <div class="bg-gray-900 border border-palermo-green/40 rounded-2xl p-5 shadow-lg shadow-palermo-green/10">
-                                <p class="text-gray-400 text-sm mb-1">Баланс</p>
-                                <p class="text-3xl font-bold text-palermo-green">{{ number_format($user->balance, 0, '.', ' ') }} монет</p>
-                            </div>
-                        </div>
-
-                        <div class="grid xl:grid-cols-2 gap-6">
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                <h4 class="font-bold text-palermo-green mb-4">Змінити логін</h4>
-
-                                <form method="POST" action="{{ route('profile.username.update') }}" class="space-y-4">
+            <div class="profile-layout mt-lg">
+                <div class="stack stack--lg">
+                    {{-- Ігровий акаунт --}}
+                    <section class="card" id="game" aria-labelledby="game-title">
+                        <h2 class="panel-title" id="game-title"><x-icon name="gamepad-2" /> Акаунт у грі</h2>
+                        @if ($user->minecraft_name)
+                            <div class="connection mt-lg">
+                                <x-head :name="$user->minecraft_name" :src="$avatar" size="44" />
+                                <div class="connection__info">
+                                    <strong>{{ $user->minecraft_name }}</strong>
+                                    <span>Привʼязано {{ $user->minecraft_linked_at?->translatedFormat('j F Y') }}. Скін і вхід працюють для цього ніку.</span>
+                                </div>
+                                <form method="POST" action="{{ route('profile.minecraft.unlink') }}">
                                     @csrf
-
-                                    <div>
-                                        <label class="block text-sm text-gray-400 mb-2">Новий логін</label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value="{{ old('name', $user->name) }}"
-                                            required
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                                        >
-                                    </div>
-
-                                    <button type="submit" class="bg-palermo-green text-black font-bold px-5 py-3 rounded-xl hover:bg-green-500 transition-colors">
-                                        Зберегти логін
-                                    </button>
+                                    <button type="submit" class="btn btn--danger btn--sm" data-confirm="Точно відвʼязати?"><x-icon name="unlink" /> Відвʼязати</button>
                                 </form>
                             </div>
-
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                <h4 class="font-bold text-palermo-green mb-4">Змінити пароль</h4>
-
-                                <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-4">
-                                    @csrf
-
-                                    <div>
-                                        <label class="block text-sm text-gray-400 mb-2">Поточний пароль</label>
-                                        <input
-                                            type="password"
-                                            name="current_password"
-                                            required
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                                        >
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm text-gray-400 mb-2">Новий пароль</label>
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            required
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                                        >
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm text-gray-400 mb-2">Повторіть новий пароль</label>
-                                        <input
-                                            type="password"
-                                            name="password_confirmation"
-                                            required
-                                            class="w-full bg-palermo-dark border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                                        >
-                                    </div>
-
-                                    <button type="submit" class="bg-palermo-green text-black font-bold px-5 py-3 rounded-xl hover:bg-green-500 transition-colors">
-                                        Оновити пароль
+                        @else
+                            <p class="muted">Привʼяжи нік, щоб скін із сайту зʼявився в грі, а Telegram і Discord працювали для входу. Підходить будь-який лаунчер — офіційний чи піратський.</p>
+                            @if (session('link_code'))
+                                <p class="label">Зайди на сервер і напиши в чат — код діє {{ config('palermo.link_code_ttl_minutes') }} хв:</p>
+                                <div class="code-box">
+                                    <code translate="no">/sitelink {{ session('link_code') }}</code>
+                                    <button type="button" class="btn btn--outline btn--sm" data-copy="/sitelink {{ session('link_code') }}">
+                                        <x-icon name="copy" /> <span data-copy-label>Копіювати</span>
                                     </button>
-                                </form>
-                            </div>
+                                </div>
+                            @endif
+                            <form method="POST" action="{{ route('profile.minecraft.code') }}" class="mt-lg">
+                                @csrf
+                                <button type="submit" class="btn {{ session('link_code') ? 'btn--ghost' : 'btn--primary' }}">
+                                    <x-icon name="key-round" /> {{ session('link_code') ? 'Отримати новий код' : 'Отримати код привʼязки' }}
+                                </button>
+                            </form>
+                        @endif
+                    </section>
 
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                                <h4 class="font-bold text-palermo-green mb-4">Підтвердження Email</h4>
+                    {{-- Месенджери --}}
+                    <section class="card" id="connections" aria-labelledby="connections-title">
+                        <h2 class="panel-title" id="connections-title"><x-icon name="shield-check" /> Вхід без пароля</h2>
+                        <p class="muted">Бот надсилатиме кнопку «Впустити» при кожному вході в гру, а на сайт можна буде заходити одним кліком.</p>
 
-                                @if ($user->email_verified_at)
-                                    <div class="bg-palermo-green/10 border border-palermo-green/30 rounded-xl p-4">
-                                        <p class="text-palermo-green font-bold">Email підтверджено</p>
-                                        <p class="text-xs text-gray-400 mt-1">
-                                            Дата підтвердження: {{ $user->email_verified_at->format('d.m.Y H:i') }}
-                                        </p>
-                                    </div>
-                                @else
-                                    <div class="bg-red-900/20 border border-red-800/50 rounded-xl p-4 mb-4">
-                                        <p class="text-red-300 font-bold">Email не підтверджено</p>
-                                        <p class="text-xs text-gray-400 mt-1">Натисніть кнопку нижче, щоб підтвердити email.</p>
-                                    </div>
-
-                                    <form method="POST" action="{{ route('profile.email.verify') }}">
+                        <div class="stack">
+                            <div class="connection card card--flat">
+                                <span class="connection__logo connection__logo--discord"><x-brand-icon name="discord" /></span>
+                                <div class="connection__info">
+                                    <strong>Discord</strong>
+                                    @if ($user->discord_id)
+                                        <span>{{ $user->discord_username }} · привʼязано {{ $user->discord_linked_at?->translatedFormat('j F Y') }}</span>
+                                    @else
+                                        <span>{{ $discordEnabled ? 'Не привʼязано' : 'Ще не налаштовано адміністрацією' }}</span>
+                                    @endif
+                                </div>
+                                @if ($user->discord_id)
+                                    <form method="POST" action="{{ route('profile.discord.unlink') }}">
                                         @csrf
-                                        <button type="submit" class="bg-palermo-green text-black font-bold px-5 py-3 rounded-xl hover:bg-green-500 transition-colors">
-                                            Підтвердити Email
-                                        </button>
+                                        <button type="submit" class="btn btn--danger btn--sm" data-confirm="Точно відвʼязати?">Відвʼязати</button>
                                     </form>
+                                @elseif ($discordEnabled)
+                                    <a href="{{ route('auth.discord.redirect') }}" class="btn btn--discord btn--sm"><x-brand-icon name="discord" /> Привʼязати</a>
                                 @endif
                             </div>
 
-                            @include('profile.partials.connections')
-                        </div>
-                    </div>
-
-                    <div id="content-balance" class="hidden">
-                        <h3 class="text-xl font-bold mb-6 border-b border-gray-700 pb-2">Поповнення балансу</h3>
-
-                        <div class="bg-gray-900 border border-palermo-green/30 rounded-2xl p-6 mb-6">
-                            <p class="text-gray-400 text-sm mb-1">Ваш баланс</p>
-                            <p class="text-4xl font-bold text-palermo-green">{{ number_format($user->balance, 0, '.', ' ') }} монет</p>
-                        </div>
-
-                        @unless ($user->isAdmin() || app()->isLocal())
-                            <div class="bg-yellow-900/20 border border-yellow-700/40 text-yellow-200 rounded-xl p-4 text-sm">
-                                Онлайн-оплату ще не підключено. Поповнення балансу з'явиться після запуску сервера.
-                            </div>
-                        @else
-                        <form method="POST" action="{{ route('profile.top-up') }}" class="space-y-5">
-                            @csrf
-
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-2">Сума поповнення</label>
-                                <input
-                                    type="number"
-                                    name="amount"
-                                    min="10"
-                                    max="100000"
-                                    required
-                                    class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                                    placeholder="Наприклад: 500"
-                                >
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-3">
-                                <button type="button" onclick="setAmount(100)" class="bg-gray-900 border border-gray-700 rounded-xl py-3 hover:border-palermo-green transition-colors">100</button>
-                                <button type="button" onclick="setAmount(500)" class="bg-gray-900 border border-gray-700 rounded-xl py-3 hover:border-palermo-green transition-colors">500</button>
-                                <button type="button" onclick="setAmount(1000)" class="bg-gray-900 border border-gray-700 rounded-xl py-3 hover:border-palermo-green transition-colors">1000</button>
-                            </div>
-
-                            <button type="submit" class="w-full bg-palermo-green text-black font-bold py-3 rounded-xl hover:bg-green-500 transition-colors uppercase">
-                                Поповнити баланс
-                            </button>
-                        </form>
-                        @endunless
-                    </div>
-
-                    <div id="content-inventory" class="hidden">
-                        <h3 class="text-xl font-bold mb-6 border-b border-gray-700 pb-2">Придбані предмети</h3>
-
-                        @forelse ($inventoryItems as $item)
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                <div>
-                                    <p class="font-bold text-lg">{{ $item->name }}</p>
-                                    <p class="text-sm text-gray-400">{{ $item->description ?: 'Предмет PalermoCraft' }}</p>
-                                    <p class="text-xs text-gray-500 mt-2">
-                                        Куплено:
-                                        {{ optional($item->purchased_at)->format('d.m.Y H:i') ?? $item->created_at->format('d.m.Y H:i') }}
-                                    </p>
-                                </div>
-
-                                <div class="flex flex-col md:items-end gap-2">
-                                    <span class="text-palermo-green font-bold">{{ number_format($item->price, 0, '.', ' ') }} монет</span>
-
-                                    @if ($item->status === 'active')
-                                        <span class="text-yellow-300 text-sm font-bold">В інвентарі</span>
-
-                                        <form method="POST" action="{{ route('profile.inventory.activate', $item) }}">
-                                            @csrf
-                                            <button type="submit" class="bg-palermo-green text-black px-4 py-2 rounded-xl hover:bg-green-500 transition-colors text-sm font-bold">
-                                                Активувати на сервері
-                                            </button>
-                                        </form>
-
-                                        <form method="POST" action="{{ route('profile.inventory.refund', $item) }}">
-                                            @csrf
-                                            <button type="submit" class="bg-red-900/50 text-red-300 border border-red-800 px-4 py-2 rounded-xl hover:bg-red-900 transition-colors text-sm font-bold">
-                                                Повернути / Refund
-                                            </button>
-                                        </form>
-                                    @elseif ($item->status === 'activated')
-                                        <span class="text-palermo-green text-sm font-bold">Активовано на сервері</span>
+                            <div class="connection card card--flat">
+                                <span class="connection__logo connection__logo--telegram"><x-brand-icon name="telegram" /></span>
+                                <div class="connection__info">
+                                    <strong>Telegram</strong>
+                                    @if ($user->telegram_id)
+                                        <span>{{ $user->telegram_username ? '@'.$user->telegram_username : 'Акаунт Telegram' }} · привʼязано {{ $user->telegram_linked_at?->translatedFormat('j F Y') }}</span>
                                     @else
-                                        <span class="text-gray-500 text-sm font-bold">Повернено</span>
+                                        <span>{{ $telegramBot ? 'Не привʼязано' : 'Ще не налаштовано адміністрацією' }}</span>
                                     @endif
                                 </div>
+                                @if ($user->telegram_id)
+                                    <form method="POST" action="{{ route('profile.telegram.unlink') }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn--danger btn--sm" data-confirm="Точно відвʼязати?">Відвʼязати</button>
+                                    </form>
+                                @elseif ($telegramBot)
+                                    <div class="telegram-widget">
+                                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                                                data-telegram-login="{{ $telegramBot }}"
+                                                data-size="medium"
+                                                data-radius="8"
+                                                data-auth-url="{{ route('auth.telegram.callback') }}"
+                                                data-request-access="write"></script>
+                                    </div>
+                                @endif
                             </div>
-                        @empty
-                            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-10 text-center">
-                                <h4 class="text-xl font-bold mb-2">Інвентар порожній</h4>
-                                <p class="text-gray-400 mb-6">Після покупок у магазині предмети зʼявляться тут.</p>
-                                <a href="{{ route('store') }}" class="inline-block bg-palermo-green text-black font-bold px-6 py-3 rounded-xl hover:bg-green-500 transition-colors">
-                                    Перейти в магазин
-                                </a>
-                            </div>
-                        @endforelse
-                    </div>
+                        </div>
+                    </section>
 
-                </section>
+                    {{-- Налаштування --}}
+                    <section class="card" id="settings" aria-labelledby="settings-title">
+                        <h2 class="panel-title" id="settings-title"><x-icon name="settings" /> Налаштування акаунта</h2>
+                        <div class="grid grid--2 mt-lg settings-grid">
+                            <form method="POST" action="{{ route('profile.username.update') }}" class="form">
+                                @csrf
+                                <h3 class="h4 mb-0">Імʼя на сайті</h3>
+                                <div class="field">
+                                    <label class="label" for="name">Нове імʼя</label>
+                                    <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}" required minlength="3" maxlength="32" autocomplete="username"
+                                           @class(['input', 'is-invalid' => $errors->has('name')])>
+                                </div>
+                                <div><button type="submit" class="btn btn--outline">Зберегти</button></div>
+                            </form>
+
+                            <form method="POST" action="{{ route('profile.password.update') }}" class="form">
+                                @csrf
+                                <h3 class="h4 mb-0">Пароль</h3>
+                                <div class="field">
+                                    <label class="label" for="current_password">Поточний пароль</label>
+                                    <input id="current_password" type="password" name="current_password" required autocomplete="current-password"
+                                           @class(['input', 'is-invalid' => $errors->has('current_password')])>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="password">Новий пароль</label>
+                                    <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password"
+                                           @class(['input', 'is-invalid' => $errors->has('password')])>
+                                </div>
+                                <div class="field">
+                                    <label class="label" for="password_confirmation">Ще раз</label>
+                                    <input id="password_confirmation" type="password" name="password_confirmation" required minlength="8" autocomplete="new-password" class="input">
+                                </div>
+                                <div><button type="submit" class="btn btn--outline">Змінити пароль</button></div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="stack">
+                    <section class="card" aria-labelledby="steps-title">
+                        <h2 class="panel-title" id="steps-title"><x-icon name="footprints" /> Перші кроки</h2>
+                        <div class="progress mt-lg" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="{{ $done }}" aria-label="Виконано кроків">
+                            <div class="progress__bar" style="width: {{ round($done / 3 * 100) }}%"></div>
+                        </div>
+                        <p class="faint" style="margin: 10px 0 16px">{{ $done === 3 ? 'Усе готово — побачимося в грі!' : $done.' з 3 виконано' }}</p>
+                        <ul class="checklist">
+                            @foreach ($steps as $step)
+                                <li @class(['is-done' => $step['done']])>
+                                    <span class="checklist__mark"><x-icon :name="$step['done'] ? 'check' : 'arrow-right'" /></span>
+                                    <a href="{{ $step['href'] }}" class="checklist__link">
+                                        <strong>{{ $step['title'] }}</strong>
+                                        <span>{{ $step['text'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+
+                    <section class="card" aria-labelledby="skin-title">
+                        <div class="card__head">
+                            <h2 class="panel-title mb-0" id="skin-title"><x-icon name="shirt" /> Скін</h2>
+                            <span class="badge {{ $skinStatus[0] }}">{{ $skinStatus[1] }}</span>
+                        </div>
+                        <div class="cluster">
+                            <x-head :name="$displayName" :src="$avatar" size="56" />
+                            <p class="muted mb-0" style="flex: 1 1 160px">
+                                @if (! $skin)
+                                    Поки що в грі стандартний вигляд.
+                                @elseif ($skin->status === 'rejected')
+                                    {{ $skin->rejection_reason ?: 'Модератор відхилив скін.' }}
+                                @elseif ($skin->status === 'pending')
+                                    Модератор перевірить його найближчим часом.
+                                @else
+                                    Модель: {{ $skin->model === 'slim' ? 'Alex (тонкі руки)' : 'Steve (класична)' }}.
+                                @endif
+                            </p>
+                        </div>
+                        <a class="btn btn--outline btn--block mt-lg" href="{{ route('profile.skin') }}">{{ $skin ? 'Змінити скін' : 'Завантажити скін' }}</a>
+                    </section>
+
+                    <section class="card card--flat" aria-label="Дані акаунта">
+                        <dl class="kv">
+                            <dt>Email</dt>
+                            <dd>{{ $user->email }}</dd>
+                            <dt>Реєстрація</dt>
+                            <dd>{{ $user->created_at->translatedFormat('j F Y') }}</dd>
+                        </dl>
+                    </section>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn--ghost btn--block"><x-icon name="log-out" /> Вийти з акаунта</button>
+                    </form>
+                </aside>
             </div>
         </div>
-    </main>
+    </section>
 @endsection
-
-@push('javascripts')
-    <script>
-        function switchProfileTab(tabId) {
-            ['info', 'balance', 'inventory'].forEach(id => {
-                document.getElementById('content-' + id).classList.add('hidden');
-                document.getElementById('content-' + id).classList.remove('block');
-
-                const btn = document.getElementById('tab-' + id);
-                btn.classList.remove('bg-gray-800', 'text-palermo-green', 'font-bold');
-                btn.classList.add('text-gray-300');
-            });
-
-            document.getElementById('content-' + tabId).classList.remove('hidden');
-            document.getElementById('content-' + tabId).classList.add('block');
-
-            const activeBtn = document.getElementById('tab-' + tabId);
-            activeBtn.classList.remove('text-gray-300');
-            activeBtn.classList.add('bg-gray-800', 'text-palermo-green', 'font-bold');
-        }
-
-        function setAmount(amount) {
-            const input = document.querySelector('input[name="amount"]');
-
-            if (input) {
-                input.value = amount;
-            }
-        }
-    </script>
-@endpush

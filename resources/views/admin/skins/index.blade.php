@@ -1,60 +1,76 @@
 @extends('admin.layout')
 
-@section('title', 'Скіни - Адмін-панель')
+@section('title', 'Скіни — адмін-панель')
 
 @section('admin')
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold">Скіни</h2>
-        <div class="flex gap-2 text-sm">
+    <div class="admin__head">
+        <h1>Скіни</h1>
+        <nav class="pill-tabs" aria-label="Статус скінів">
             @foreach (['pending' => 'На перевірці', 'approved' => 'Схвалені', 'rejected' => 'Відхилені'] as $key => $label)
-                <a href="{{ route('admin.skins.index', ['status' => $key]) }}" class="px-3 py-1 rounded-xl {{ $status === $key ? 'bg-gray-800 text-palermo-green font-bold' : 'text-gray-400 hover:bg-gray-800' }}">{{ $label }}</a>
+                <a href="{{ route('admin.skins.index', ['status' => $key]) }}" @if ($status === $key) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
-        </div>
+        </nav>
     </div>
 
     @unless (app(\App\Services\MineSkinClient::class)->isConfigured())
-        <div class="mb-6 bg-yellow-900/20 border border-yellow-700/40 text-yellow-200 rounded-xl p-4 text-sm">
-            MINESKIN_API_KEY не задано: схвалені скіни бачитимуть лише гравці з модом. Ключ: account.mineskin.org → API Keys.
+        <div class="alert alert--warn" style="margin-bottom: 20px">
+            <x-icon name="triangle-alert" />
+            <p>MINESKIN_API_KEY не задано: схвалені скіни бачитимуть лише гравці з модом. Ключ — account.mineskin.org → API Keys.</p>
         </div>
     @endunless
 
-    <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        @forelse ($skins as $skin)
-            <div class="bg-palermo-card border border-gray-800 rounded-2xl p-4">
-                <div class="flex gap-4">
-                    <img src="{{ route('skins.preview', $skin) }}?v={{ $skin->hash }}" alt="" class="w-32 h-32 bg-gray-900 rounded-lg" style="image-rendering: pixelated">
-                    <div class="text-sm min-w-0">
-                        <a href="{{ route('admin.users.show', $skin->user) }}" class="font-bold hover:text-palermo-green">{{ $skin->user->minecraft_name ?? $skin->user->name }}</a>
-                        <p class="text-gray-500 text-xs">{{ $skin->model }} · {{ $skin->updated_at->format('d.m H:i') }}</p>
-                        @if ($skin->isApproved())
-                            <p class="text-xs mt-2 {{ $skin->isSigned() ? 'text-palermo-green' : 'text-yellow-300' }}">{{ $skin->isSigned() ? 'Підписано (бачать усі)' : 'Без підпису' }}</p>
-                            @if ($skin->sign_error)<p class="text-xs text-red-300 break-words">{{ $skin->sign_error }}</p>@endif
-                        @endif
-                        @if ($skin->rejection_reason)<p class="text-xs text-red-300 mt-2">{{ $skin->rejection_reason }}</p>@endif
+    @if ($skins->isEmpty())
+        <div class="empty">
+            <x-icon name="shirt" />
+            <h3>Тут порожньо</h3>
+            <p class="mb-0">Нових скінів на цій вкладці немає.</p>
+        </div>
+    @else
+        <div class="grid grid--3">
+            @foreach ($skins as $skin)
+                <article class="card skin-review">
+                    <div class="skin-review__top">
+                        <img class="skin-review__img" src="{{ route('skins.preview', $skin) }}?v={{ $skin->hash }}" alt="Скін {{ $skin->user->minecraft_name ?? $skin->user->name }}" width="112" height="112">
+                        <div style="min-width: 0">
+                            <a href="{{ route('admin.users.show', $skin->user) }}"><strong>{{ $skin->user->minecraft_name ?? $skin->user->name }}</strong></a>
+                            <span class="table__sub">{{ $skin->model === 'slim' ? 'Alex' : 'Steve' }} · {{ $skin->updated_at->format('d.m H:i') }}</span>
+                            @if ($skin->isApproved())
+                                <span @class(['badge', 'mt-0', 'badge--success' => $skin->isSigned(), 'badge--warn' => ! $skin->isSigned()]) style="margin-top: 8px">
+                                    {{ $skin->isSigned() ? 'Підписано' : 'Без підпису' }}
+                                </span>
+                                @if ($skin->sign_error)
+                                    <span class="table__sub" style="color: #ffadad">{{ $skin->sign_error }}</span>
+                                @endif
+                            @endif
+                            @if ($skin->rejection_reason)
+                                <span class="table__sub" style="color: #ffadad">{{ $skin->rejection_reason }}</span>
+                            @endif
+                        </div>
                     </div>
-                </div>
-                <div class="flex flex-wrap gap-2 mt-4">
-                    @unless ($skin->isApproved())
-                        <form method="POST" action="{{ route('admin.skins.approve', $skin) }}">@csrf
-                            <button class="bg-palermo-green text-black font-bold px-3 py-1 rounded-lg text-sm">Схвалити</button>
-                        </form>
-                    @endunless
-                    @if ($skin->isApproved() && ! $skin->isSigned())
-                        <form method="POST" action="{{ route('admin.skins.resign', $skin) }}">@csrf
-                            <button class="bg-gray-800 px-3 py-1 rounded-lg text-sm">Підписати ще раз</button>
-                        </form>
-                    @endif
+                    <div class="cluster cluster--sm">
+                        @unless ($skin->isApproved())
+                            <form method="POST" action="{{ route('admin.skins.approve', $skin) }}">
+                                @csrf
+                                <button class="btn btn--success btn--sm"><x-icon name="check" /> Схвалити</button>
+                            </form>
+                        @endunless
+                        @if ($skin->isApproved() && ! $skin->isSigned())
+                            <form method="POST" action="{{ route('admin.skins.resign', $skin) }}">
+                                @csrf
+                                <button class="btn btn--outline btn--sm">Підписати ще раз</button>
+                            </form>
+                        @endif
+                    </div>
                     @if ($skin->status !== 'rejected')
-                        <form method="POST" action="{{ route('admin.skins.reject', $skin) }}" class="flex gap-2 flex-1">@csrf
-                            <input name="reason" required maxlength="255" placeholder="Причина відмови" class="flex-1 min-w-0 bg-gray-900 border border-gray-700 px-2 py-1 rounded-lg text-sm">
-                            <button class="bg-red-900/60 text-red-200 px-3 py-1 rounded-lg text-sm">Відхилити</button>
+                        <form method="POST" action="{{ route('admin.skins.reject', $skin) }}" class="input-group">
+                            @csrf
+                            <input name="reason" required maxlength="255" placeholder="Причина відмови" class="input" aria-label="Причина відмови" style="min-height: 36px; padding: .45rem .7rem; font-size: .9rem">
+                            <button class="btn btn--danger btn--sm">Відхилити</button>
                         </form>
                     @endif
-                </div>
-            </div>
-        @empty
-            <p class="text-gray-500">Тут порожньо.</p>
-        @endforelse
-    </div>
-    <div class="mt-4">{{ $skins->links() }}</div>
+                </article>
+            @endforeach
+        </div>
+    @endif
+    {{ $skins->links() }}
 @endsection
