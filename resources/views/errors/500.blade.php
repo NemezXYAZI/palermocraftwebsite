@@ -3,7 +3,7 @@
 @section('title', 'Помилка сервера')
 
 @section('content')
-    @include('partials.emblem', ['class' => 'error-page__emblem', 'label' => ''])
+    <img class="error-page__emblem" src="{{ asset('images/logo.svg') }}" alt="" width="120" height="120">
     <p class="error-page__code text-gold">500</p>
     <h1>Щось зламалося в глибинах</h1>
     <p class="lead">Ми вже знаємо про проблему. Спробуй оновити сторінку трохи згодом.</p>

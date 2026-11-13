@@ -2,6 +2,7 @@
     $discord = config('palermo.community.discord');
     $telegram = config('palermo.community.telegram');
     $bot = config('services.telegram.bot_username');
+    $address = trim((string) config('palermo.server_address'));
 @endphp
 <footer class="site-footer">
     <div class="container">
@@ -12,13 +13,17 @@
                     <span class="brand__name">PALERMOCRAFT</span>
                 </a>
                 <p class="footer-about">
-                    Сезон I «Ехо Безодні» — український сюжетний SMP на Minecraft Java {{ config('palermo.game_version') }}.
-                    Поселення, підземелля, Повелителі та дванадцять Очей Безодні.
+                    Сезон I «Ехо Безодні» — сюжетний SMP на Minecraft Java {{ config('palermo.game_version') }}.
+                    Поселення з жителями, підземелля й Повелителі.
                 </p>
-                <button type="button" class="btn btn--outline btn--sm" data-copy="{{ config('palermo.server_address') }}" data-copied="IP скопійовано">
-                    <x-icon name="copy" />
-                    <span data-copy-label translate="no">{{ config('palermo.server_address') }}</span>
-                </button>
+                @if ($address !== '')
+                    <button type="button" class="btn btn--outline btn--sm" data-copy="{{ $address }}" data-copied="IP скопійовано">
+                        <x-icon name="copy" />
+                        <span data-copy-label translate="no">{{ $address }}</span>
+                    </button>
+                @else
+                    <p class="footer-soon"><x-icon name="clock" /> Адресу сервера оголосимо перед стартом сезону</p>
+                @endif
             </div>
 
             <div>

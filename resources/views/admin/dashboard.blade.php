@@ -30,6 +30,9 @@
             @if ($server['online'])
                 <span class="stat__value"><span class="dot dot--online" style="display: inline-block; vertical-align: middle"></span> {{ $server['players'] }}/{{ $server['max'] }}</span>
                 <span class="table__sub">{{ $server['version'] }}</span>
+            @elseif (! $server['announced'])
+                <span class="stat__value" style="color: var(--text-3); font-size: 1.15rem">адреса не задана</span>
+                <span class="table__sub" style="overflow-wrap: anywhere">PALERMO_GAME_ADDRESS у .env</span>
             @else
                 <span class="stat__value" style="color: var(--text-3)">офлайн</span>
             @endif

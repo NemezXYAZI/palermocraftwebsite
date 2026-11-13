@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-    @include('partials.emblem', ['class' => 'error-page__emblem', 'label' => ''])
+    <img class="error-page__emblem" src="{{ asset('images/logo.svg') }}" alt="" width="120" height="120">
     <p class="error-page__code text-gold">503</p>
     <h1>Сайт оновлюється</h1>
     <p class="lead">Ми ставимо нову версію — це займе хвилину-дві. Сторінка оновиться сама.</p>

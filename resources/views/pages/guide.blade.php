@@ -4,7 +4,7 @@
 @section('description', 'Як зайти на PALERMOCRAFT: Minecraft Java '.config('palermo.game_version').' з будь-якого лаунчера, вхід без паролів через Telegram чи Discord, акаунт і скін на сайті, поселення, підземелля, команди та відповіді на часті питання.')
 
 @php
-    $address = config('palermo.server_address');
+    $address = trim((string) config('palermo.server_address'));
     $version = config('palermo.game_version');
     $bot = config('services.telegram.bot_username');
     $buildings = [
@@ -54,11 +54,15 @@
                             <span class="step__num">2</span>
                             <div>
                                 <h3>Додай сервер</h3>
-                                <p class="muted">У головному меню: «Мережева гра» → «Додати сервер». Назва — будь-яка, адреса:</p>
-                                <div class="code-box">
-                                    <code translate="no">{{ $address }}</code>
-                                    <button type="button" class="btn btn--outline btn--sm" data-copy="{{ $address }}"><x-icon name="copy" /> <span data-copy-label>Копіювати</span></button>
-                                </div>
+                                @if ($address !== '')
+                                    <p class="muted">У головному меню: «Мережева гра» → «Додати сервер». Назва — будь-яка, адреса:</p>
+                                    <div class="code-box">
+                                        <code translate="no">{{ $address }}</code>
+                                        <button type="button" class="btn btn--outline btn--sm" data-copy="{{ $address }}"><x-icon name="copy" /> <span data-copy-label>Копіювати</span></button>
+                                    </div>
+                                @else
+                                    <p class="muted">У головному меню: «Мережева гра» → «Додати сервер». Назва — будь-яка, а адресу оголосимо перед стартом сезону в <a href="{{ route('news.index') }}">новинах</a>.</p>
+                                @endif
                             </div>
                         </article>
                         <article class="guide-step">
@@ -227,7 +231,7 @@
     {{-- Пригоди --}}
     <section class="section" id="adventure" aria-labelledby="adventure-title">
         <div class="container">
-            <x-section-head kicker="Пригоди" title="Підземелля, Повелителі й Очі" title-id="adventure-title" />
+            <x-section-head kicker="Пригоди" title="Підземелля, Повелителі й Кодекс" title-id="adventure-title" />
             <div class="grid grid--3">
                 <article class="card feature accent-violet" data-reveal>
                     <span class="icon-tile"><x-icon name="door-open" /></span>
@@ -240,9 +244,9 @@
                     <p class="card__text">Азраель, Еліор і Веларіс мають власні фази бою. Бос-данжі проходять групою в окремому світі: збери друзів командою <code>/party</code>.</p>
                 </article>
                 <article class="card feature accent-abyss" data-reveal style="--delay: .12s">
-                    <span class="icon-tile"><x-icon name="eye" /></span>
-                    <h3 class="card__title">Очі Безодні</h3>
-                    <p class="card__text">Дванадцять артефактів — по чотири в кожному домені. Кодекс Мандрівника відстежує знайдені Очі й підказує, де шукати далі.</p>
+                    <span class="icon-tile"><x-icon name="book-open" /></span>
+                    <h3 class="card__title">Кодекс Мандрівника</h3>
+                    <p class="card__text">Жива книга, що росте разом із тобою: думки героя, знайдені місця, забуті рецепти й бестіарій. Відкривається командою <code>/book</code>.</p>
                 </article>
             </div>
         </div>

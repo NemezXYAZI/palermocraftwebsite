@@ -3,7 +3,7 @@
 @section('title', 'Сесія застаріла')
 
 @section('content')
-    @include('partials.emblem', ['class' => 'error-page__emblem', 'label' => ''])
+    <img class="error-page__emblem" src="{{ asset('images/logo.svg') }}" alt="" width="120" height="120">
     <p class="error-page__code text-gold">419</p>
     <h1>Сесія застаріла</h1>
     <p class="lead">Сторінка була відкрита занадто довго. Онови її та спробуй ще раз.</p>

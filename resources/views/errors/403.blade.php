@@ -3,7 +3,7 @@
 @section('title', 'Доступ закрито')
 
 @section('content')
-    @include('partials.emblem', ['class' => 'error-page__emblem', 'label' => ''])
+    <img class="error-page__emblem" src="{{ asset('images/logo.svg') }}" alt="" width="120" height="120">
     <p class="error-page__code text-gold">403</p>
     <h1>Ця брама зачинена</h1>
     <p class="lead">У тебе немає прав на цю сторінку. Якщо вважаєш, що це помилка, — напиши адміністрації.</p>
