@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Мій скін')
+@section('title', __('Мій скін'))
 @section('noindex', true)
 
 @php
     $status = match ($skin?->status) {
-        'approved' => ['badge--success', 'circle-check', 'Схвалено'],
-        'pending' => ['badge--warn', 'clock', 'На перевірці'],
-        'rejected' => ['badge--danger', 'circle-x', 'Відхилено'],
-        default => ['badge--violet', 'sparkles', 'Стандартний вигляд'],
+        'approved' => ['badge--success', 'circle-check', __('Схвалено')],
+        'pending' => ['badge--warn', 'clock', __('На перевірці')],
+        'rejected' => ['badge--danger', 'circle-x', __('Відхилено')],
+        default => ['badge--violet', 'sparkles', __('Стандартний вигляд')],
     };
     $maxKb = (int) config('palermo.skins.max_kb');
 @endphp
@@ -16,9 +16,9 @@
 @section('content')
     <section class="section section--tight">
         <div class="container">
-            <a class="back-link" href="{{ route('profile.index') }}"><x-icon name="arrow-left" /> До профілю</a>
-            <h1 class="mt-lg" style="margin-top: 14px">Мій скін</h1>
-            <p class="lead">Скін бачать усі гравці — з ліцензійних і піратських лаунчерів, без модів.</p>
+            <a class="back-link" href="{{ route('profile.index') }}"><x-icon name="arrow-left" /> {{ __('До профілю') }}</a>
+            <h1 class="mt-lg" style="margin-top: 14px">{{ __('Мій скін') }}</h1>
+            <p class="lead">{{ __('Скін бачать усі гравці — з ліцензійних і піратських лаунчерів, без модів.') }}</p>
 
             @include('partials.flash')
 
@@ -28,50 +28,50 @@
                         <span class="skin-stage__label badge {{ $status[0] }}" data-skin-badge>
                             <x-icon :name="$status[1]" /> <span data-skin-badge-text>{{ $status[2] }}</span>
                         </span>
-                        <canvas id="skin-viewer" aria-label="Тривимірний перегляд скіна. Перетягни, щоб повернути."></canvas>
+                        <canvas id="skin-viewer" aria-label="{{ __('Тривимірний перегляд скіна. Перетягни, щоб повернути.') }}"></canvas>
                         <div class="skin-stage__tools">
-                            <button type="button" class="btn btn--ghost btn--sm btn--icon" data-skin-toggle aria-label="Зупинити анімацію" aria-pressed="false">
+                            <button type="button" class="btn btn--ghost btn--sm btn--icon" data-skin-toggle aria-label="{{ __('Зупинити анімацію') }}" aria-pressed="false">
                                 <x-icon name="pause" class="icon-pause" />
                                 <x-icon name="play" class="icon-play" />
                             </button>
                         </div>
-                        <noscript><p class="muted">Для 3D-перегляду увімкни JavaScript.</p></noscript>
+                        <noscript><p class="muted">{{ __('Для 3D-перегляду увімкни JavaScript.') }}</p></noscript>
                     </div>
 
                     @if ($skin)
                         <div class="card card--flat">
                             <dl class="kv">
-                                <dt>Модель</dt>
-                                <dd>{{ $skin->model === 'slim' ? 'Alex — тонкі руки' : 'Steve — класична' }}</dd>
-                                <dt>Оновлено</dt>
+                                <dt>{{ __('Модель') }}</dt>
+                                <dd>{{ $skin->model === 'slim' ? __('Alex — тонкі руки') : __('Steve — класична') }}</dd>
+                                <dt>{{ __('Оновлено') }}</dt>
                                 <dd>{{ $skin->updated_at->translatedFormat('j F Y, H:i') }}</dd>
                                 @if ($skin->status === 'rejected' && $skin->rejection_reason)
-                                    <dt>Причина</dt>
+                                    <dt>{{ __('Причина') }}</dt>
                                     <dd>{{ $skin->rejection_reason }}</dd>
                                 @endif
                             </dl>
                             @if ($skin->isApproved() && ! $skin->isSigned())
                                 <div class="alert alert--info mt-lg">
                                     <x-icon name="info" />
-                                    <p>Скін схвалено, але ще не підписано — поки його бачать лише гравці з модом PalermoClient. Підпис зʼявиться автоматично.</p>
+                                    <p>{{ __('Скін схвалено, але ще не підписано — поки його бачать лише гравці з модом Palermo Skin Sync.') }} <a href="{{ route('mods') }}#ours">{{ __('Завантажити мод') }}</a>. {{ __('Підпис зʼявиться автоматично.') }}</p>
                                 </div>
                             @endif
                             <form method="POST" action="{{ route('profile.skin.destroy') }}" class="mt-lg">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn--danger btn--sm" data-confirm="Точно видалити скін?"><x-icon name="trash-2" /> Видалити скін</button>
+                                <button type="submit" class="btn btn--danger btn--sm" data-confirm="{{ __('Точно видалити скін?') }}"><x-icon name="trash-2" /> {{ __('Видалити скін') }}</button>
                             </form>
                         </div>
                     @endif
                 </div>
 
                 <div class="card">
-                    <h2 class="panel-title"><x-icon name="upload" /> Новий скін</h2>
+                    <h2 class="panel-title"><x-icon name="upload" /> {{ __('Новий скін') }}</h2>
 
                     @unless ($user->minecraft_name)
                         <div class="alert alert--warn mt-lg">
                             <x-icon name="triangle-alert" />
-                            <p>Спершу <a href="{{ route('profile.index') }}#game">привʼяжи нік</a> у профілі — інакше сервер не знатиме, чий це скін.</p>
+                            <p>{{ __('Спершу') }} <a href="{{ route('profile.index') }}#game">{{ __('привʼяжи нік') }}</a> {{ __('у профілі — інакше сервер не знатиме, чий це скін.') }}</p>
                         </div>
                     @endunless
 
@@ -79,35 +79,35 @@
                         @csrf
                         <label class="dropzone" data-dropzone>
                             <x-icon name="image" />
-                            <strong>Перетягни PNG сюди або натисни, щоб вибрати</strong>
-                            <span class="help">64×64 або 64×32 пікселі, до {{ $maxKb }} КБ</span>
+                            <strong>{{ __('Перетягни PNG сюди або натисни, щоб вибрати') }}</strong>
+                            <span class="help">{{ __('64×64 або 64×32 пікселі, до :kb КБ', ['kb' => $maxKb]) }}</span>
                             <span class="dropzone__file" data-dropzone-file></span>
                             <input type="file" name="skin" accept="image/png" required data-skin-file>
                         </label>
                         <p class="field-error" data-skin-error hidden></p>
 
                         <fieldset class="field" style="border: 0; padding: 0; margin: 0">
-                            <legend class="label" style="margin-bottom: 8px">Модель</legend>
+                            <legend class="label" style="margin-bottom: 8px">{{ __('Модель') }}</legend>
                             <div class="choice-grid">
                                 <label class="choice">
                                     <input type="radio" name="model" value="classic" @checked(old('model', $skin?->model ?? 'classic') !== 'slim')>
-                                    <span class="choice__box"><strong>Steve</strong><span>Класичні руки, 4 пікселі</span></span>
+                                    <span class="choice__box"><strong>Steve</strong><span>{{ __('Класичні руки, 4 пікселі') }}</span></span>
                                 </label>
                                 <label class="choice">
                                     <input type="radio" name="model" value="slim" @checked(old('model', $skin?->model) === 'slim')>
-                                    <span class="choice__box"><strong>Alex</strong><span>Тонкі руки, 3 пікселі</span></span>
+                                    <span class="choice__box"><strong>Alex</strong><span>{{ __('Тонкі руки, 3 пікселі') }}</span></span>
                                 </label>
                             </div>
                         </fieldset>
 
-                        <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="upload" /> Завантажити</button>
+                        <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="upload" /> {{ __('Завантажити') }}</button>
                     </form>
 
                     <ul class="check-list mt-lg">
-                        <li><x-icon name="check" /> Обраний файл одразу видно в 3D-перегляді</li>
-                        <li><x-icon name="check" /> Працює для всіх лаунчерів, без модів</li>
+                        <li><x-icon name="check" /> {{ __('Обраний файл одразу видно в 3D-перегляді') }}</li>
+                        <li><x-icon name="check" /> {{ __('Працює для всіх лаунчерів, без модів') }}</li>
                         @if (config('palermo.skins.require_approval'))
-                            <li><x-icon name="clock" class="is-no" /> Перед появою в грі скін перевіряє модератор</li>
+                            <li><x-icon name="clock" class="is-no" /> {{ __('Перед появою в грі скін перевіряє модератор') }}</li>
                         @endif
                     </ul>
                 </div>
@@ -124,9 +124,19 @@
             var stage = document.querySelector('[data-skin-stage]');
             if (!canvas || !stage || !window.skinview3d) return;
 
-            var current = @json($skin ? route('skins.preview', $skin).'?v='.$skin->hash : null);
-            var currentModel = @json($skin?->model === 'slim' ? 'slim' : 'default');
+            {{-- Js::from, а не @json: @json ріже вираз по комах --}}
+            var current = {{ \Illuminate\Support\Js::from($skin ? route('skins.preview', $skin).'?v='.$skin->hash : null) }};
+            var currentModel = {{ \Illuminate\Support\Js::from($skin?->model === 'slim' ? 'slim' : 'default') }};
             var maxBytes = {{ $maxKb }} * 1024;
+            var t = {{ \Illuminate\Support\Js::from([
+                'play' => __('Запустити анімацію'),
+                'pause' => __('Зупинити анімацію'),
+                'png' => __('Потрібен файл PNG.'),
+                'tooBig' => __('Файл завеликий: до :kb КБ.', ['kb' => $maxKb]),
+                'badSize' => __('Розмір скіна має бути 64×64 або 64×32 пікселі, а цей — :size.'),
+                'preview' => __('Попередній перегляд'),
+                'unreadable' => __('Не вдалося прочитати зображення.'),
+            ]) }};
 
             // Мандрівник у каптурі — замість стандартного скіна, поки свого немає
             function wanderer() {
@@ -174,7 +184,7 @@
                     viewer.animation.paused = paused;
                     viewer.autoRotate = !paused;
                     toggle.setAttribute('aria-pressed', paused ? 'true' : 'false');
-                    toggle.setAttribute('aria-label', paused ? 'Запустити анімацію' : 'Зупинити анімацію');
+                    toggle.setAttribute('aria-label', paused ? t.play : t.pause);
                     toggle.classList.toggle('is-paused', paused);
                 });
             }
@@ -205,27 +215,27 @@
                 var file = fileInput.files && fileInput.files[0];
                 if (!file) return;
                 if (file.type && file.type !== 'image/png') {
-                    showError('Потрібен файл PNG.');
+                    showError(t.png);
                     fileInput.value = '';
                     return;
                 }
                 if (file.size > maxBytes) {
-                    showError('Файл завеликий: до {{ $maxKb }} КБ.');
+                    showError(t.tooBig);
                     fileInput.value = '';
                     return;
                 }
                 var img = new Image();
                 img.onload = function () {
                     if (img.width !== 64 || (img.height !== 64 && img.height !== 32)) {
-                        showError('Розмір скіна має бути 64×64 або 64×32 пікселі, а цей — ' + img.width + '×' + img.height + '.');
+                        showError(t.badSize.replace(':size', img.width + '×' + img.height));
                         fileInput.value = '';
                         return;
                     }
                     preview = img;
                     viewer.loadSkin(img, { model: model() });
-                    if (badgeText) badgeText.textContent = 'Попередній перегляд';
+                    if (badgeText) badgeText.textContent = t.preview;
                 };
-                img.onerror = function () { showError('Не вдалося прочитати зображення.'); };
+                img.onerror = function () { showError(t.unreadable); };
                 img.src = URL.createObjectURL(file);
             });
         })();

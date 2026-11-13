@@ -54,4 +54,9 @@ class PageController extends Controller
     {
         return view('pages.support');
     }
+
+    public function mods()
+    {
+        return view('pages.mods', ['mods' => Content::get('mods')]);
+    }
 }

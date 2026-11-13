@@ -30,7 +30,7 @@ class AuthController extends Controller
 
         if (!Auth::attempt($credentials, $remember)) {
             return back()
-                ->withErrors(['email' => 'Невірний email або пароль.'])
+                ->withErrors(['email' => __('Невірний email або пароль.')])
                 ->onlyInput('email');
         }
 
@@ -38,7 +38,7 @@ class AuthController extends Controller
             $reason = Auth::user()->ban_reason;
             Auth::logout();
 
-            return back()->withErrors(['email' => 'Акаунт заблоковано: '.($reason ?: 'без пояснення')])->onlyInput('email');
+            return back()->withErrors(['email' => __('Акаунт заблоковано: :reason', ['reason' => $reason ?: __('без пояснення')])])->onlyInput('email');
         }
 
         $request->session()->regenerate();

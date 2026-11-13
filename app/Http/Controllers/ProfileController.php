@@ -35,7 +35,7 @@ class ProfileController extends Controller
             'name' => $data['name'],
         ]);
 
-        return back()->with('success', 'Логін успішно змінено.');
+        return back()->with('success', __('Логін успішно змінено.'));
     }
 
     public function updatePassword(Request $request)
@@ -49,7 +49,7 @@ class ProfileController extends Controller
 
         if (!Hash::check($data['current_password'], $user->password)) {
             return back()->withErrors([
-                'current_password' => 'Поточний пароль введено неправильно.',
+                'current_password' => __('Поточний пароль введено неправильно.'),
             ]);
         }
 
@@ -57,7 +57,7 @@ class ProfileController extends Controller
             'password' => $data['password'],
         ]);
 
-        return back()->with('success', 'Пароль успішно змінено.');
+        return back()->with('success', __('Пароль успішно змінено.'));
     }
 
 
@@ -69,7 +69,7 @@ class ProfileController extends Controller
             'discord_linked_at' => null,
         ]);
 
-        return back()->with('success', 'Discord акаунт відвʼязано.');
+        return back()->with('success', __('Discord акаунт відвʼязано.'));
     }
 
     public function unlinkTelegram(Request $request)
@@ -80,7 +80,7 @@ class ProfileController extends Controller
             'telegram_linked_at' => null,
         ]);
 
-        return back()->with('success', 'Telegram акаунт відвʼязано.');
+        return back()->with('success', __('Telegram акаунт відвʼязано.'));
     }
 
     /** Код для команди /sitelink у грі: підтверджує, що нік справді належить власнику акаунта. */
@@ -110,6 +110,6 @@ class ProfileController extends Controller
             'minecraft_linked_at' => null,
         ]);
 
-        return back()->with('success', 'Ігровий акаунт відвʼязано.');
+        return back()->with('success', __('Ігровий акаунт відвʼязано.'));
     }
 }

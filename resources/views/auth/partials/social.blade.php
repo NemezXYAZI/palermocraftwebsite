@@ -6,7 +6,7 @@
     <div class="social-login">
         @if ($discordEnabled)
             <a href="{{ route('auth.discord.redirect') }}" class="btn btn--discord btn--lg btn--block">
-                <x-brand-icon name="discord" /> {{ $discordLabel ?? 'Увійти через Discord' }}
+                <x-brand-icon name="discord" /> {{ $discordLabel ?? __('Увійти через Discord') }}
             </a>
         @endif
         @if ($telegramBot)
@@ -20,6 +20,6 @@
             </div>
         @endif
     </div>
-    <p class="help text-center mt-0">{{ $hint ?? 'Працює, якщо Discord чи Telegram уже привʼязано в профілі.' }}</p>
-    <p class="divider-text">або через email</p>
+    <p class="help text-center mt-0">{{ $hint ?? __('Працює, якщо Discord чи Telegram уже привʼязано в профілі.') }}</p>
+    <p class="divider-text">{{ __('або через email') }}</p>
 @endif

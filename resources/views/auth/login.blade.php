@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Вхід')
+@section('title', __('Вхід'))
 @section('noindex', true)
 
 @section('content')
     <div class="auth">
         @include('auth.partials.aside', [
-            'heading' => 'З поверненням, Мандрівнику',
-            'text' => 'Твій профіль — це скін, який бачать усі гравці, нік у грі та вхід через Telegram чи Discord.',
+            'heading' => __('З поверненням, Мандрівнику'),
+            'text' => __('Твій профіль — це скін, який бачать усі гравці, нік у грі та вхід через Telegram чи Discord.'),
         ])
 
         <div class="auth__main">
             <div class="auth__card">
-                <h1>Вхід</h1>
-                <p class="muted">Немає акаунта? <a href="{{ route('register') }}">Створи його</a> — це хвилина.</p>
+                <h1>{{ __('Вхід') }}</h1>
+                <p class="muted">{{ __('Немає акаунта?') }} <a href="{{ route('register') }}">{{ __('Створи його') }}</a> {{ __('— це хвилина.') }}</p>
 
                 @include('partials.flash')
                 @include('auth.partials.social')
@@ -26,17 +26,17 @@
                                @class(['input', 'is-invalid' => $errors->has('email')]) placeholder="you@example.com">
                     </div>
                     <div class="field">
-                        <label class="label" for="password">Пароль</label>
+                        <label class="label" for="password">{{ __('Пароль') }}</label>
                         <input id="password" type="password" name="password" required autocomplete="current-password" class="input">
                     </div>
                     <label class="check">
                         <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
-                        Запамʼятати мене
+                        {{ __('Запамʼятати мене') }}
                     </label>
-                    <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="log-in" /> Увійти</button>
+                    <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="log-in" /> {{ __('Увійти') }}</button>
                 </form>
 
-                <p class="auth__switch">Грати можна й без акаунта — <a href="{{ route('guide') }}#join">як зайти на сервер</a>.</p>
+                <p class="auth__switch">{{ __('Грати можна й без акаунта —') }} <a href="{{ route('guide') }}#join">{{ __('як зайти на сервер') }}</a>.</p>
             </div>
         </div>
     </div>

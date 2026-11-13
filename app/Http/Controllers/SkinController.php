@@ -28,8 +28,8 @@ class SkinController extends Controller
         $skin = $skins->upload($request->user(), $data['skin'], $data['model']);
 
         return back()->with('success', $skin->isApproved()
-            ? 'Скін оновлено. У грі він зʼявиться одразу або після перезаходу.'
-            : 'Скін завантажено й відправлено на перевірку модератору.');
+            ? __('Скін оновлено. У грі він зʼявиться одразу або після перезаходу.')
+            : __('Скін завантажено й відправлено на перевірку модератору.'));
     }
 
     public function destroy(Request $request, SkinService $skins)
@@ -44,7 +44,7 @@ class SkinController extends Controller
             $skins->notifyGame($request->user());
         }
 
-        return back()->with('success', 'Скін видалено.');
+        return back()->with('success', __('Скін видалено.'));
     }
 
     /**

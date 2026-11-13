@@ -23,11 +23,11 @@ class SkinService
         $bytes = file_get_contents($file->getRealPath());
         $size = @getimagesizefromstring($bytes);
         if ($size === false || $size[2] !== IMAGETYPE_PNG) {
-            throw ValidationException::withMessages(['skin' => 'Файл має бути PNG-зображенням.']);
+            throw ValidationException::withMessages(['skin' => __('Файл має бути PNG-зображенням.')]);
         }
         [$width, $height] = $size;
         if (! ($width === 64 && in_array($height, [32, 64], true))) {
-            throw ValidationException::withMessages(['skin' => 'Розмір скіна має бути 64×64 або 64×32 пікселі.']);
+            throw ValidationException::withMessages(['skin' => __('Розмір скіна має бути 64×64 або 64×32 пікселі.')]);
         }
 
         $hash = sha1($bytes);
