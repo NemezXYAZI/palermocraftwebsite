@@ -19,6 +19,9 @@ class PalermoFeaturesTest extends TestCase
 
     private const TOKEN = 'test-token-123';
 
+    /** Що відповідає api.mcsrvstat.us у тестах. */
+    private array $serverResponse = ['online' => false];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,7 +31,7 @@ class PalermoFeaturesTest extends TestCase
             'services.mineskin.key' => null,
         ]);
         Storage::fake('local');
-        Http::fake(['api.mcsrvstat.us/*' => Http::response(['online' => false])]);
+        Http::fake(['api.mcsrvstat.us/*' => fn () => Http::response($this->serverResponse)]);
     }
 
     private function png(int $w = 64, int $h = 64): UploadedFile
@@ -140,11 +143,17 @@ class PalermoFeaturesTest extends TestCase
         $this->actingAs($player->fresh())->get('/profile')->assertRedirect('/login');
     }
 
-    public function test_free_top_up_is_closed_for_players(): void
+    public function test_fake_store_is_gone_and_old_links_redirect(): void
     {
+        // Магазин був заглушкою: «видавав» товари, яких гра не отримувала
         $player = User::factory()->create();
-        $this->actingAs($player)->post('/profile/top-up', ['amount' => 1000])->assertForbidden();
+        $this->actingAs($player)->post('/profile/top-up', ['amount' => 1000])->assertNotFound();
+        $this->actingAs($player)->post('/store/buy-now', ['product_id' => 'vip_30'])->assertNotFound();
         $this->assertSame(0, (int) $player->fresh()->balance);
+
+        $this->get('/store')->assertRedirect('/support')->assertStatus(301);
+        $this->get('/about')->assertRedirect('/world')->assertStatus(301);
+        $this->get('/support')->assertOk()->assertSee('Без pay-to-win');
     }
 
     public function test_telegram_login_signature_check(): void
@@ -167,9 +176,17 @@ class PalermoFeaturesTest extends TestCase
     public function test_public_pages_render(): void
     {
         News::create(['title' => 'Старт сезону', 'slug' => 'start', 'body' => "Перший абзац\n\nДругий", 'published_at' => now()]);
+        $this->get('/')->assertOk()
+            ->assertSee('Ехо Безодні')
+            ->assertSee(config('palermo.server_address'))
+            ->assertSee('Старт сезону');
+        $this->get('/world')->assertOk()->assertSee('Пісок Забуття')->assertSee('Око Забуття');
+        $this->get('/guide')->assertOk()->assertSee('/link КОД', false)->assertSee('Метрополія');
+        $this->get('/rules')->assertOk()->assertSee('Чесна гра')->assertSee('2.1');
         $this->get('/news')->assertOk()->assertSee('Старт сезону');
         $this->get('/news/start')->assertOk()->assertSee('Другий');
-        $this->get('/login')->assertOk();
+        $this->get('/login')->assertOk()->assertSee('Вхід');
+        $this->get('/register')->assertOk()->assertSee('Створити акаунт');
 
         $user = User::factory()->create();
         $this->actingAs($user)->get('/profile')->assertOk()->assertSee('Акаунт у грі');
@@ -194,5 +211,44 @@ class PalermoFeaturesTest extends TestCase
         $this->get("/admin/news/{$news->id}/edit")->assertOk();
         $this->post('/admin/news', ['title' => 'Відкриття сервера', 'body' => 'Скоро!', 'publish' => 1])->assertRedirect('/admin/news');
         $this->get('/news')->assertSee('Відкриття сервера');
+    }
+
+    public function test_home_shows_who_is_online(): void
+    {
+        $this->serverResponse = [
+            'online' => true,
+            'version' => 'Purpur 1.21.4',
+            'players' => ['online' => 2, 'max' => 50, 'list' => [['name' => 'Nemez'], ['name' => 'Semen']]],
+        ];
+        $owner = User::factory()->create(['minecraft_name' => 'Nemez']);
+        Skin::create(['user_id' => $owner->id, 'model' => 'classic', 'path' => 'skins/x.png', 'hash' => 'abc', 'status' => Skin::STATUS_APPROVED]);
+
+        $this->get('/')->assertOk()
+            ->assertSee('Онлайн: 2 з 50')
+            ->assertSee('2 Мандрівники у Безодні')
+            ->assertSee('Semen')
+            ->assertSee('/skins/Nemez.png', false)
+            ->assertDontSee('/skins/Semen.png', false);
+    }
+
+    public function test_sitemap_lists_pages_and_published_news(): void
+    {
+        News::create(['title' => 'Опубліковано', 'slug' => 'public-one', 'body' => 'Текст', 'published_at' => now()]);
+        News::create(['title' => 'Чернетка', 'slug' => 'secret-draft', 'body' => 'Текст']);
+
+        $this->get('/sitemap.xml')->assertOk()
+            ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
+            ->assertSee('/guide', false)
+            ->assertSee('/news/public-one', false)
+            ->assertDontSee('secret-draft', false);
+    }
+
+    public function test_errors_are_themed_and_validation_speaks_ukrainian(): void
+    {
+        $this->get('/no-such-page')->assertNotFound()->assertSee('поглинула Безодня');
+
+        $this->from('/register')->post('/register', [])
+            ->assertRedirect('/register')
+            ->assertSessionHasErrors(['name' => 'Заповніть поле «нікнейм».']);
     }
 }

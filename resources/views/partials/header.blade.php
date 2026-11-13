@@ -1,40 +1,84 @@
-<header class="flex justify-between items-center py-4 px-8 border-b-2 border-neon bg-palermo-dark sticky top-0 z-40">
-    <div class="text-xl font-bold uppercase tracking-wider flex items-center">
-        <a href="{{ route('home') }}" class="hover:text-palermo-green transition-colors">PALERMOCRAFT</a>
-        @isset($serverStatus)
-            <span class="ml-4 text-xs normal-case font-normal tracking-normal {{ $serverStatus['online'] ? 'text-palermo-green' : 'text-gray-500' }}"
-                  title="{{ $serverStatus['address'] }}">
-                ● {{ $serverStatus['online'] ? $serverStatus['players'].' онлайн' : 'офлайн' }}
-            </span>
-        @endisset
-    </div>
+@php
+    $navItems = [
+        ['route' => 'world', 'label' => 'Світ', 'icon' => 'map'],
+        ['route' => 'guide', 'label' => 'Путівник', 'icon' => 'compass'],
+        ['route' => 'news.index', 'label' => 'Новини', 'icon' => 'newspaper', 'match' => 'news.*'],
+        ['route' => 'rules', 'label' => 'Правила', 'icon' => 'scroll-text'],
+        ['route' => 'support', 'label' => 'Підтримка', 'icon' => 'heart-handshake'],
+    ];
+    $authUser = auth()->user();
+    $authSkin = $authUser?->skin;
+    $authAvatar = $authSkin ? route('skins.preview', $authSkin).'?v='.$authSkin->hash : null;
+    $authName = $authUser ? ($authUser->minecraft_name ?: $authUser->name) : null;
+@endphp
+<header class="site-header" data-header>
+    <div class="container site-header__inner">
+        <a href="{{ route('home') }}" class="brand" aria-label="PALERMOCRAFT — на головну">
+            @include('partials.mark')
+            <span class="brand__name">PALERMOCRAFT</span>
+        </a>
 
-    <nav class="hidden md:block">
-        <ul class="flex space-x-6 text-sm font-semibold">
-            <li><a href="{{ route('home') }}" class="hover:text-palermo-green transition-colors">Головна</a></li>
-            <li><a href="{{ route('about') }}" class="hover:text-palermo-green transition-colors">Про сервер</a></li>
-            <li><a href="{{ route('rules') }}" class="hover:text-palermo-green transition-colors">Правила</a></li>
-            <li><a href="{{ route('news.index') }}" class="hover:text-palermo-green transition-colors">Новини</a></li>
-            <li><a href="{{ route('store') }}" class="hover:text-palermo-green transition-colors">Магазин</a></li>
+        <nav class="nav" aria-label="Головне меню">
+            @foreach ($navItems as $item)
+                <a href="{{ route($item['route']) }}" class="nav__link"
+                   @if (request()->routeIs($item['match'] ?? $item['route'])) aria-current="page" @endif>{{ $item['label'] }}</a>
+            @endforeach
+        </nav>
+
+        <div class="site-header__actions">
+            <x-status-pill />
 
             @auth
-                <li><a href="{{ route('profile.index') }}" class="text-palermo-green hover:text-white transition-colors">Профіль</a></li>
+                <details class="dropdown" data-menu>
+                    <summary class="user-chip" aria-label="Меню акаунта">
+                        <x-head :name="$authName" :src="$authAvatar" size="30" round />
+                        <span class="hide-mobile">{{ \Illuminate\Support\Str::limit($authName, 16) }}</span>
+                        <x-icon name="chevron-down" />
+                    </summary>
+                    <div class="dropdown__panel">
+                        <div class="dropdown__head">
+                            <strong>{{ $authUser->name }}</strong>
+                            <span>{{ $authUser->minecraft_name ? 'Нік у грі: '.$authUser->minecraft_name : 'Нік у грі ще не привʼязано' }}</span>
+                        </div>
+                        <a class="menu-link" href="{{ route('profile.index') }}"><x-icon name="user-round" /> Профіль</a>
+                        <a class="menu-link" href="{{ route('profile.skin') }}"><x-icon name="shirt" /> Мій скін</a>
+                        @if ($authUser->isStaff())
+                            <a class="menu-link menu-link--gold" href="{{ route('admin.dashboard') }}"><x-icon name="shield" /> Адмін-панель</a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="menu-link menu-link--danger" type="submit"><x-icon name="log-out" /> Вийти</button>
+                        </form>
+                    </div>
+                </details>
             @else
-                <li><a href="{{ route('login') }}" class="hover:text-palermo-green transition-colors">Вхід</a></li>
+                <a href="{{ route('login') }}" class="btn btn--ghost btn--sm hide-mobile">Увійти</a>
+                <a href="{{ route('guide') }}#join" class="btn btn--primary btn--sm">Грати</a>
             @endauth
-        </ul>
-    </nav>
 
-    @auth
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="bg-red-900/50 text-red-400 border border-red-900/50 font-bold py-2 px-4 rounded hover:bg-red-900 transition-colors text-sm uppercase">
-                Вихід
-            </button>
-        </form>
-    @else
-        <a href="{{ route('register') }}" class="bg-palermo-green text-black font-bold py-2 px-4 rounded hover:bg-green-500 transition-colors text-sm uppercase">
-            Реєстрація
-        </a>
-    @endauth
+            <details class="nav-burger" data-menu>
+                <summary aria-label="Меню">
+                    <x-icon name="menu" class="icon-open" />
+                    <x-icon name="x" class="icon-close" />
+                </summary>
+                <div class="nav-burger__panel">
+                    <nav aria-label="Мобільне меню">
+                        <a href="{{ route('home') }}" class="menu-link" @if (request()->routeIs('home')) aria-current="page" @endif><x-icon name="house" /> Головна</a>
+                        @foreach ($navItems as $item)
+                            <a href="{{ route($item['route']) }}" class="menu-link"
+                               @if (request()->routeIs($item['match'] ?? $item['route'])) aria-current="page" @endif><x-icon :name="$item['icon']" /> {{ $item['label'] }}</a>
+                        @endforeach
+                    </nav>
+                    <hr>
+                    @auth
+                        <a href="{{ route('profile.index') }}" class="menu-link"><x-icon name="user-round" /> Профіль</a>
+                        <a href="{{ route('profile.skin') }}" class="menu-link"><x-icon name="shirt" /> Мій скін</a>
+                    @else
+                        <a href="{{ route('login') }}" class="menu-link"><x-icon name="log-in" /> Увійти</a>
+                        <a href="{{ route('register') }}" class="menu-link menu-link--gold"><x-icon name="user-round" /> Створити акаунт</a>
+                    @endauth
+                </div>
+            </details>
+        </div>
+    </div>
 </header>

@@ -1,78 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Вхід - PalermoCraft')
+@section('title', 'Вхід')
+@section('noindex', true)
 
 @section('content')
-    <main class="flex-grow py-16 px-4 max-w-lg mx-auto w-full">
-        <div class="bg-palermo-card border border-gray-800 rounded-3xl p-8 shadow-2xl shadow-palermo-green/10">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-palermo-green mb-2">Вхід</h1>
-                <p class="text-gray-400 text-sm">Повернись до свого PalermoCraft акаунта</p>
+    <div class="auth">
+        @include('auth.partials.aside', [
+            'heading' => 'З поверненням, Мандрівнику',
+            'text' => 'Твій профіль — це скін, який бачать усі гравці, нік у грі та вхід через Telegram чи Discord.',
+        ])
+
+        <div class="auth__main">
+            <div class="auth__card">
+                <h1>Вхід</h1>
+                <p class="muted">Немає акаунта? <a href="{{ route('register') }}">Створи його</a> — це хвилина.</p>
+
+                @include('partials.flash')
+                @include('auth.partials.social')
+
+                <form method="POST" action="{{ route('login.store') }}" class="form">
+                    @csrf
+                    <div class="field">
+                        <label class="label" for="email">Email</label>
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email"
+                               @class(['input', 'is-invalid' => $errors->has('email')]) placeholder="you@example.com">
+                    </div>
+                    <div class="field">
+                        <label class="label" for="password">Пароль</label>
+                        <input id="password" type="password" name="password" required autocomplete="current-password" class="input">
+                    </div>
+                    <label class="check">
+                        <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
+                        Запамʼятати мене
+                    </label>
+                    <button type="submit" class="btn btn--primary btn--lg btn--block"><x-icon name="log-in" /> Увійти</button>
+                </form>
+
+                <p class="auth__switch">Грати можна й без акаунта — <a href="{{ route('guide') }}#join">як зайти на сервер</a>.</p>
             </div>
-
-            @if ($errors->any())
-                <div class="mb-6 bg-red-900/30 border border-red-700/50 text-red-300 rounded-xl p-4 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
-                @csrf
-
-                <div>
-                    <label class="block text-sm text-gray-400 mb-2">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value="{{ old('email') }}"
-                        required
-                        class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                        placeholder="player@palermo.ua"
-                    >
-                </div>
-
-                <div>
-                    <label class="block text-sm text-gray-400 mb-2">Пароль</label>
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        class="w-full bg-gray-900 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-palermo-green transition-colors"
-                        placeholder="••••••••"
-                    >
-                </div>
-
-                <label class="flex items-center gap-3 text-sm text-gray-400">
-                    <input type="checkbox" name="remember" class="accent-palermo-green">
-                    Запамʼятати мене
-                </label>
-
-                <button type="submit" class="w-full bg-palermo-green text-black font-bold py-3 rounded-xl hover:bg-green-500 transition-colors uppercase">
-                    Увійти
-                </button>
-            </form>
-
-            @if (config('services.discord.client_id') || config('services.telegram.bot_username'))
-                <div class="mt-6 pt-6 border-t border-gray-800 space-y-3 text-center">
-                    <p class="text-xs text-gray-500">Або увійдіть через привʼязану соцмережу</p>
-                    @if (config('services.discord.client_id'))
-                        <a href="{{ route('auth.discord.redirect') }}" class="block w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 rounded-xl transition-colors">Увійти через Discord</a>
-                    @endif
-                    @if (config('services.telegram.bot_username'))
-                        <script async src="https://telegram.org/js/telegram-widget.js?22"
-                                data-telegram-login="{{ config('services.telegram.bot_username') }}"
-                                data-size="large"
-                                data-auth-url="{{ route('auth.telegram.callback') }}"></script>
-                    @endif
-                </div>
-            @endif
-
-            <p class="text-center text-gray-400 text-sm mt-6">
-                Немає акаунта?
-                <a href="{{ route('register') }}" class="text-palermo-green hover:text-white transition-colors font-bold">Зареєструватися</a>
-            </p>
         </div>
-    </main>
+    </div>
 @endsection

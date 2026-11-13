@@ -1,46 +1,56 @@
 @extends('admin.layout')
 
-@section('title', 'Гравці - Адмін-панель')
+@section('title', 'Гравці — адмін-панель')
 
 @section('admin')
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h2 class="text-2xl font-bold">Гравці</h2>
-        <form method="GET" class="flex gap-2">
-            <input type="text" name="q" value="{{ $q }}" placeholder="Логін, email, нік, Discord, Telegram"
-                   class="bg-gray-900 border border-gray-700 px-4 py-2 rounded-xl w-72 focus:outline-none focus:border-palermo-green">
-            <select name="filter" class="bg-gray-900 border border-gray-700 px-3 py-2 rounded-xl">
+    <div class="admin__head">
+        <h1>Гравці</h1>
+        <form method="GET" class="filters" role="search">
+            <input type="search" name="q" value="{{ $q }}" placeholder="Імʼя, email, нік, Discord, Telegram" class="input" aria-label="Пошук гравців">
+            <select name="filter" class="select" aria-label="Фільтр">
                 <option value="">Усі</option>
                 <option value="banned" @selected(request('filter') === 'banned')>Заблоковані</option>
                 <option value="staff" @selected(request('filter') === 'staff')>Команда</option>
             </select>
-            <button class="bg-palermo-green text-black font-bold px-4 rounded-xl">Знайти</button>
+            <button class="btn btn--outline"><x-icon name="search" /> Знайти</button>
         </form>
     </div>
 
-    <div class="bg-palermo-card border border-gray-800 rounded-2xl overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="text-gray-400 text-left border-b border-gray-800">
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
                 <tr>
-                    <th class="p-3">Логін</th><th class="p-3">Нік у грі</th><th class="p-3">Роль</th>
-                    <th class="p-3">Discord</th><th class="p-3">Telegram</th><th class="p-3">Статус</th><th class="p-3">Реєстрація</th>
+                    <th scope="col">Акаунт</th>
+                    <th scope="col">Нік у грі</th>
+                    <th scope="col">Роль</th>
+                    <th scope="col">Discord</th>
+                    <th scope="col">Telegram</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col">Реєстрація</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($users as $u)
-                    <tr class="border-b border-gray-800/60 hover:bg-gray-900/60">
-                        <td class="p-3"><a href="{{ route('admin.users.show', $u) }}" class="font-bold hover:text-palermo-green">{{ $u->name }}</a><br><span class="text-xs text-gray-500">{{ $u->email }}</span></td>
-                        <td class="p-3">{{ $u->minecraft_name ?? '—' }}</td>
-                        <td class="p-3">{{ $u->role }}</td>
-                        <td class="p-3">{{ $u->discord_username ?? '—' }}</td>
-                        <td class="p-3">{{ $u->telegram_username ?? '—' }}</td>
-                        <td class="p-3">@if($u->isBanned())<span class="text-red-400">бан</span>@else<span class="text-palermo-green">активний</span>@endif</td>
-                        <td class="p-3 text-gray-500">{{ $u->created_at->format('d.m.Y') }}</td>
+                    <tr>
+                        <td><a href="{{ route('admin.users.show', $u) }}"><strong>{{ $u->name }}</strong></a><span class="table__sub">{{ $u->email }}</span></td>
+                        <td>{{ $u->minecraft_name ?? '—' }}</td>
+                        <td>{{ ['player' => 'Гравець', 'moderator' => 'Модератор', 'admin' => 'Адміністратор'][$u->role] ?? $u->role }}</td>
+                        <td>{{ $u->discord_username ?? '—' }}</td>
+                        <td>{{ $u->telegram_username ?? '—' }}</td>
+                        <td>
+                            @if ($u->isBanned())
+                                <span class="badge badge--danger">бан</span>
+                            @else
+                                <span class="badge badge--success">активний</span>
+                            @endif
+                        </td>
+                        <td class="nowrap">{{ $u->created_at->format('d.m.Y') }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="p-6 text-center text-gray-500">Нікого не знайдено.</td></tr>
+                    <tr><td colspan="7" class="text-center faint">Нікого не знайдено.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="mt-4">{{ $users->links() }}</div>
+    {{ $users->links() }}
 @endsection

@@ -3,27 +3,23 @@
 namespace App\Providers;
 
 use App\Services\ServerStatus;
-use Illuminate\Support\Facades\View;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        // Один екземпляр на запит: статус сервера питаємо лише раз, навіть якщо він на сторінці кілька разів
+        $this->app->singleton(ServerStatus::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Статус сервера в шапці (кешується на 60 с)
-        View::composer('partials.header', function ($view) {
-            $view->with('serverStatus', app(ServerStatus::class)->get());
-        });
+        Carbon::setLocale(app()->getLocale());
+
+        Paginator::defaultView('vendor.pagination.palermo');
+        Paginator::defaultSimpleView('vendor.pagination.palermo-simple');
     }
 }
