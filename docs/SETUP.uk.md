@@ -19,7 +19,7 @@
 
 ### Оновлення
 `https://palermocraft.com/update.php`:
-- **«Оновити з GitHub»**: після кожного злиття в `main` GitHub Actions проганяє тести і викладає `palermocraft-site.zip` у Releases. Кнопка бере останній.
+- **«Оновити з GitHub»**: після кожного злиття в `main` GitHub Actions проганяє тести і викладає `palermocraft-site.zip` у Releases. Кнопка бере останній. Репозиторій приватний, тож у `.env` потрібен `UPDATE_GITHUB_TOKEN`: github.com → Settings → Developer settings → Fine-grained tokens → Generate, доступ лише до `palermocraftwebsite`, дозвіл **Contents: Read-only**. Токен вписуй лише в `.env` на хостингу; кнопка читає його одразу, «Лише база і кеш» не потрібне.
 - **«Оновити з архіву»**: або вибери zip у формі, або (якщо він більший за ліміт завантаження PHP) поклади його через Файловий менеджер як `update.zip` поруч з `artisan` і натисни кнопку без файлу.
 
 Що робить оновлення:

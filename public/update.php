@@ -203,8 +203,18 @@ function pc_download_github(string $dest): array
     }
 
     [$status, $body] = pc_http("https://api.github.com/repos/$repo/releases/latest", $headers);
+    // Для приватного репозиторію без токена GitHub відповідає 404, ніби його немає
+    if ($status === 404 && $token === '') {
+        throw new RuntimeException("GitHub не віддає збірки $repo без токена: репозиторій приватний. Додай у .env рядок UPDATE_GITHUB_TOKEN= (fine-grained token лише на цей репозиторій, Contents: Read-only) або скористайся «Оновити з архіву».");
+    }
     if ($status === 404) {
-        throw new RuntimeException("На GitHub ще немає збірок ($repo → Releases). Вони з'являються після злиття в main.");
+        throw new RuntimeException("Збірок не знайдено ($repo → Releases): або їх ще немає (з'являються після злиття в main), або UPDATE_GITHUB_TOKEN не має доступу до цього репозиторію.");
+    }
+    if ($status === 401) {
+        throw new RuntimeException('UPDATE_GITHUB_TOKEN недійсний або прострочений: створи новий (Contents: Read-only) і заміни його в .env.');
+    }
+    if ($status === 403 || $status === 429) {
+        throw new RuntimeException("GitHub тимчасово обмежив запити з цього хостингу (HTTP $status). Спробуй пізніше або скористайся «Оновити з архіву».");
     }
     if ($status !== 200) {
         throw new RuntimeException("GitHub API відповів $status");
