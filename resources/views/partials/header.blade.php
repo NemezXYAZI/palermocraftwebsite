@@ -1,6 +1,12 @@
 <header class="flex justify-between items-center py-4 px-8 border-b-2 border-neon bg-palermo-dark sticky top-0 z-40">
     <div class="text-xl font-bold uppercase tracking-wider flex items-center">
         <a href="{{ route('home') }}" class="hover:text-palermo-green transition-colors">PALERMOCRAFT</a>
+        @isset($serverStatus)
+            <span class="ml-4 text-xs normal-case font-normal tracking-normal {{ $serverStatus['online'] ? 'text-palermo-green' : 'text-gray-500' }}"
+                  title="{{ $serverStatus['address'] }}">
+                ● {{ $serverStatus['online'] ? $serverStatus['players'].' онлайн' : 'офлайн' }}
+            </span>
+        @endisset
     </div>
 
     <nav class="hidden md:block">
@@ -8,6 +14,7 @@
             <li><a href="{{ route('home') }}" class="hover:text-palermo-green transition-colors">Головна</a></li>
             <li><a href="{{ route('about') }}" class="hover:text-palermo-green transition-colors">Про сервер</a></li>
             <li><a href="{{ route('rules') }}" class="hover:text-palermo-green transition-colors">Правила</a></li>
+            <li><a href="{{ route('news.index') }}" class="hover:text-palermo-green transition-colors">Новини</a></li>
             <li><a href="{{ route('store') }}" class="hover:text-palermo-green transition-colors">Магазин</a></li>
 
             @auth

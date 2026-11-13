@@ -34,6 +34,13 @@ class AuthController extends Controller
                 ->onlyInput('email');
         }
 
+        if (Auth::user()->isBanned()) {
+            $reason = Auth::user()->ban_reason;
+            Auth::logout();
+
+            return back()->withErrors(['email' => 'Акаунт заблоковано: '.($reason ?: 'без пояснення')])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->route('profile.index');

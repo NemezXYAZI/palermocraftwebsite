@@ -1,0 +1,48 @@
+# Після кожного злиття в main: тести → збірка palermocraft-site.zip → GitHub Release.
+# Сторінка https://palermocraft.com/update.php («Оновити з GitHub») бере останній реліз.
+name: Збірка для cPanel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-cpanel
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, pdo_mysql, zip, gd, fileinfo
+          tools: composer:v2
+          coverage: none
+
+      - name: Тести
+        run: |
+          composer install --no-interaction --no-progress --prefer-dist
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test
+
+      - name: Збірка архіву
+        run: bash deploy/build.sh
+
+      - name: Реліз
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="build-$(date -u +%Y%m%d-%H%M)-${GITHUB_SHA::7}"
+          gh release create "$TAG" dist/palermocraft-site.zip \
+            --title "Збірка $TAG" \
+            --notes "Автоматична збірка для cPanel з коміту ${GITHUB_SHA::7}. Оновлення: palermocraft.com/update.php → «Оновити з GitHub»." \
+            --latest

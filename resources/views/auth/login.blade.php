@@ -54,6 +54,21 @@
                 </button>
             </form>
 
+            @if (config('services.discord.client_id') || config('services.telegram.bot_username'))
+                <div class="mt-6 pt-6 border-t border-gray-800 space-y-3 text-center">
+                    <p class="text-xs text-gray-500">Або увійдіть через привʼязану соцмережу</p>
+                    @if (config('services.discord.client_id'))
+                        <a href="{{ route('auth.discord.redirect') }}" class="block w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 rounded-xl transition-colors">Увійти через Discord</a>
+                    @endif
+                    @if (config('services.telegram.bot_username'))
+                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                                data-telegram-login="{{ config('services.telegram.bot_username') }}"
+                                data-size="large"
+                                data-auth-url="{{ route('auth.telegram.callback') }}"></script>
+                    @endif
+                </div>
+            @endif
+
             <p class="text-center text-gray-400 text-sm mt-6">
                 Немає акаунта?
                 <a href="{{ route('register') }}" class="text-palermo-green hover:text-white transition-colors font-bold">Зареєструватися</a>

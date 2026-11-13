@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
+use App\Models\MinecraftLinkCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -82,23 +84,10 @@ class ProfileController extends Controller
         return back()->with('success', 'Email успішно підтверджено.');
     }
 
-    public function linkDiscord(Request $request)
-    {
-        $data = $request->validate([
-            'discord_code' => ['required', 'string', 'size:6'],
-        ]);
-
-        $request->user()->update([
-            'discord_username' => 'Discord #' . strtoupper($data['discord_code']),
-            'discord_linked_at' => now(),
-        ]);
-
-        return back()->with('success', 'Discord акаунт успішно привʼязано.');
-    }
-
     public function unlinkDiscord(Request $request)
     {
         $request->user()->update([
+            'discord_id' => null,
             'discord_username' => null,
             'discord_linked_at' => null,
         ]);
@@ -106,23 +95,10 @@ class ProfileController extends Controller
         return back()->with('success', 'Discord акаунт відвʼязано.');
     }
 
-    public function linkTelegram(Request $request)
-    {
-        $data = $request->validate([
-            'telegram_code' => ['required', 'string', 'size:6'],
-        ]);
-
-        $request->user()->update([
-            'telegram_username' => '@telegram_' . strtoupper($data['telegram_code']),
-            'telegram_linked_at' => now(),
-        ]);
-
-        return back()->with('success', 'Telegram акаунт успішно привʼязано.');
-    }
-
     public function unlinkTelegram(Request $request)
     {
         $request->user()->update([
+            'telegram_id' => null,
             'telegram_username' => null,
             'telegram_linked_at' => null,
         ]);
@@ -130,8 +106,41 @@ class ProfileController extends Controller
         return back()->with('success', 'Telegram акаунт відвʼязано.');
     }
 
+    /** Код для команди /sitelink у грі: підтверджує, що нік справді належить власнику акаунта. */
+    public function minecraftCode(Request $request)
+    {
+        $user = $request->user();
+        MinecraftLinkCode::where('user_id', $user->id)->whereNull('used_at')->delete();
+
+        do {
+            $code = strtoupper(Str::random(8));
+        } while (MinecraftLinkCode::where('code', $code)->exists());
+
+        MinecraftLinkCode::create([
+            'user_id' => $user->id,
+            'code' => $code,
+            'expires_at' => now()->addMinutes(config('palermo.link_code_ttl_minutes')),
+        ]);
+
+        return back()->with('link_code', $code);
+    }
+
+    public function minecraftUnlink(Request $request)
+    {
+        $request->user()->update([
+            'minecraft_name' => null,
+            'minecraft_uuid' => null,
+            'minecraft_linked_at' => null,
+        ]);
+
+        return back()->with('success', 'Ігровий акаунт відвʼязано.');
+    }
+
     public function topUp(Request $request)
     {
+        // Справжньої оплати ще немає: «поповнення» дозволене лише адмінам і в локальній розробці
+        abort_unless($request->user()->isAdmin() || app()->isLocal(), 403, 'Онлайн-оплату ще не підключено.');
+
         $data = $request->validate([
             'amount' => ['required', 'integer', 'min:10', 'max:100000'],
         ]);

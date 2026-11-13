@@ -1,0 +1,13 @@
+# PALERMOCRAFT: потрібен лише якщо сайт лежить прямо в public_html
+# (а не document root → папка public). Усі запити йдуть у public/,
+# тож .env, vendor і storage ззовні недоступні.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Перевірка SSL (AutoSSL / Let's Encrypt) має йти повз Laravel
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.|\.(env|log|sqlite|zip)$">
+    Require all denied
+</FilesMatch>
