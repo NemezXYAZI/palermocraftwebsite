@@ -9,7 +9,7 @@ return [
 
     'title' => 'Echoes of the Void',
     'tagline' => 'A story-driven SMP in a dark fantasy world',
-    'pitch' => 'The Lords who stole the power of the Void have become shadows of their own ruins. Found settlements with friends, explore forgotten lands and find out what happened to the First Wanderer.',
+    'pitch' => 'Three Lords turned to the power of the Void — and their kingdoms fell silent. Come to the Palermo archipelago, rebuild settlements with friends and uncover the truth someone tried so hard to hide.',
 
     'facts' => [
         ['title' => 'Vanilla client', 'text' => 'No required mods — runs fine even on a weak PC.'],
@@ -21,26 +21,26 @@ return [
     'domains' => [
         'sun' => [
             'region' => 'Desert',
-            'name' => 'Sands of Oblivion',
+            'name' => 'The Ancient Pyramid',
             'lord' => 'Azrael',
-            'lord_title' => 'Priest of the Sun',
-            'text' => 'A former high priest driven mad by worship of the undying sun. He sought light without shadow — and immortality for himself.',
+            'lord_title' => 'Lord of the Desert',
+            'text' => 'A former priest obsessed with an eternal sun, light and the idea of immortality. His Heart commanded the earth, the sands and the forces beneath them.',
             'style' => 'Smooth sandstone, acacia and bamboo — the architecture of the eastern sands.',
         ],
         'life' => [
             'region' => 'Summer',
-            'name' => 'Fort of Green Silence',
+            'name' => 'The Underground Fortifications',
             'lord' => 'Elior',
-            'lord_title' => 'Engineer of the Living',
-            'text' => 'A brilliant strategist and explorer. He fused living things with ancient mechanisms and redstone matrices to conquer nature itself.',
+            'lord_title' => 'Lord of Summer',
+            'text' => 'A strategist and scholar who tried to master life through nature and ancient mechanisms. His Heart commanded life, plants and warmth.',
             'style' => 'Oak and birch, stone bricks, flowers — cosy plains classics.',
         ],
         'frost' => [
             'region' => 'Winter',
-            'name' => 'Icy Crowns',
+            'name' => 'The Winter Castle',
             'lord' => 'Velaris',
-            'lord_title' => 'Lord of Cold and Time',
-            'text' => 'The reserved ruler of the northern mountains. Horrified by decay, he wanted to stop time and preserve his kingdom in icy eternity.',
+            'lord_title' => 'Lord of Winter',
+            'text' => 'A cold, reserved ruler who wished to stop time and preserve his kingdom forever. His Heart commanded time, cold and ice.',
             'style' => 'Spruce, snow, ice and slate, warm lanterns of mountain villages.',
         ],
     ],
@@ -49,28 +49,29 @@ return [
         [
             'title' => 'Three Lords',
             'text' => [
-                'Once the world flourished under the watch of three rulers. Each embodied one of mortals\' strivings for perfection: Velaris — eternity, Azrael — light without shadow, Elior — power over nature itself.',
+                'Once, three mighty Lords ruled the world. Velaris, Lord of Winter, was a cold, reserved ruler who wished to stop time and preserve his kingdom forever. Azrael, Lord of the Desert, was a former priest obsessed with an eternal sun, light and the idea of immortality. Elior, Lord of Summer, was a strategist and scholar who tried to master life through nature and ancient mechanisms.',
+                'Each of them sought absolute power over their element. For that, they turned to a forbidden power — the Void.',
             ],
         ],
         [
             'title' => 'Hearts of the Void',
             'text' => [
-                'To realise their ambitions, the Lords crossed a forbidden line and turned to the primordial energy of the Void. From it they forged three artefacts — the Hearts, which gave them godlike power over their lands.',
-                'But the Hearts became breaches in the fabric of existence. The Void began to seep into the world and twist everything alive.',
+                'From the energy of the Void, the Lords created three mysterious artifacts — the Hearts, which gave them incredible strength and let them control nature.',
+                'But along with that power, they opened a path for the Void into the ordinary world. What was meant to be the dawn of a new era slowly became a threat to every living thing.',
             ],
         ],
         [
-            'title' => 'The Deed of the First Wanderer',
+            'title' => 'Forgotten Legends',
             'text' => [
-                'Kael learned where the rulers\' experiments were leading. He challenged them, tore out the Hearts and stopped the collapse — but the price was terrible.',
-                'The Lords did not die: without their Hearts they turned into twisted, half-living sentinels of their own ruins. And the breach of the Void could not be closed from outside — so Kael went into the heart of the rift and chained himself there, becoming the Living Barrier.',
+                'Many years passed. The settlements emptied, the castles fell to ruin, and the stories of the Lords became forgotten legends.',
+                'All they say is that someone once stood against them — and paid far too high a price. Who it was and what became of them, the legends do not tell.',
             ],
         ],
         [
-            'title' => 'A New Wanderer',
+            'title' => 'A New Traveller',
             'text' => [
-                'Centuries passed. The villages emptied, castles became tombs of knowledge, and the names of Velaris, Azrael, Elior and Kael faded into myth.',
-                'Now you arrive in this fallen world — and from here on, the Wanderers write the story.',
+                'Now a new Traveller arrives on the Palermo archipelago. Ahead lies a journey through abandoned lands, ancient dungeons and forgotten fortresses. They will have to restore the settlements, face the consequences of long-past events and gather the fragments of a story someone tried so hard to hide.',
+                'But can they learn the truth without repeating the mistakes of those who came before?',
             ],
         ],
     ],
@@ -80,9 +81,9 @@ return [
         ['title' => 'Dungeons', 'text' => 'Everyone sees their own loot in chests — nobody strips the ruins before you. Boss dungeons are played as a group in separate worlds.'],
         ['title' => 'Lords', 'text' => 'Azrael, Elior and Velaris — custom bosses with unique battle phases. Better to face them as a squad.'],
         ['title' => 'Armour trims', 'text' => 'Every trim material and smithing pattern gives its own bonus — from night vision to a shield in a pinch. A full set triggers resonance.'],
-        ['title' => 'Wanderer\'s Codex', 'text' => 'A living book: the hero\'s thoughts, discovered places, forgotten recipes and a bestiary. New entries appear on their own as soon as you find something.'],
+        ['title' => 'Wanderer\'s Codex', 'text' => 'A living book: the hero\'s diary, discovered places, forgotten recipes and a bestiary. New entries appear on their own as soon as you find something.'],
         ['title' => 'Teams and squads', 'text' => 'Gather friends into a team (/team): shared land, a settlement and a compass to your allies. For boss dungeons — a squad (/party).'],
-        ['title' => 'Living inhabitants', 'text' => 'Village elders and traders talk to you and hand out tasks, while colony villagers work alongside you.'],
+        ['title' => 'Settlement spirits', 'text' => 'Spirits of former inhabitants tell you what happened here and ask you to rebuild their homes, while colony villagers work alongside you.'],
         ['title' => 'Your look', 'text' => 'Every player sees your site skin — licensed or cracked, with no mods at all.'],
     ],
 
