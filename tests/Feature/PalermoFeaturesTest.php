@@ -179,7 +179,7 @@ class PalermoFeaturesTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('Ехо Безодні')
             ->assertSee('Старт сезону');
-        $this->get('/world')->assertOk()->assertSee('Передісторія')->assertSee('Пісок Забуття');
+        $this->get('/world')->assertOk()->assertSee('Передісторія')->assertSee('Зимовий Замок')->assertDontSee('Каель');
         $this->get('/guide')->assertOk()->assertSee('/link КОД', false)->assertSee('Метрополія');
         $this->get('/rules')->assertOk()->assertSee('Чесна гра')->assertSee('2.1');
         $this->get('/mods')->assertOk()->assertSee('Sodium')->assertSee('Palermo Dialogues');
